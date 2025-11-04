@@ -55,6 +55,10 @@ body::after{bottom:-260px; left:-200px; background:radial-gradient(circle at cen
 
 /* Utils */
 .hidden{display:none !important}
+[id*="apadAnyad"],
+[class*="apad-anyad"],
+[data-feature*="apad-anyad"],
+[data-legacy*="apad-anyad"]{display:none !important}
 .center{text-align:center}
 .right{text-align:right}
 .bold{font-weight:900}
@@ -211,6 +215,38 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
 /* Tiny helpers for long screens */
 .sep{height:8px}
 </style>
+<style>
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-card { text-align: center; padding-top: 26px; padding-bottom: 28px; }
+.chat-card h2 { margin-bottom: 10px; font-size: 18px; }
+.chat-box { width: min(100%, 460px); margin: 0 auto; display: flex; flex-direction: column; gap: 18px; font-family: "Inter", sans-serif; }
+.chat-messages { display: flex; flex-direction: column; gap: 14px; align-items: stretch; text-align: left; min-height: 140px; }
+.chat-message { display: flex; align-items: flex-end; gap: 12px; opacity: 0; animation: fadeSlideIn .45s ease forwards; transition: opacity .3s ease, transform .3s ease; }
+.chat-message.from-dad { justify-content: flex-end; }
+.chat-message.from-mom { justify-content: flex-start; }
+.chat-message.chat-hide { opacity: 0; transform: translateY(-8px); }
+.chat-avatar { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; box-shadow: 0 8px 18px rgba(15, 23, 42, .12); background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(242,246,255,.68)); }
+.chat-message.from-dad .chat-avatar { background: linear-gradient(135deg, rgba(11,102,255,.75), rgba(75,141,255,.8)); color: #fff; }
+.chat-bubble { max-width: calc(100% - 76px); padding: 12px 16px; border-radius: 18px; box-shadow: 0 10px 28px rgba(15, 36, 84, .12); background: linear-gradient(135deg, rgba(238,242,255,.88), rgba(255,255,255,.92)); color: var(--text); }
+.chat-message.from-mom .chat-bubble { background: linear-gradient(135deg, rgba(148,163,184,.18), rgba(203,213,225,.32)); }
+.chat-message.from-dad .chat-bubble { background: linear-gradient(135deg, rgba(11,102,255,.18), rgba(75,141,255,.32)); }
+.chat-message.from-dad .chat-bubble { border-bottom-right-radius: 6px; }
+.chat-message.from-mom .chat-bubble { border-bottom-left-radius: 6px; }
+.chat-text { font-weight: 600; line-height: 1.5; }
+.chat-timestamp, .chat-response { display: block; font-size: 11px; color: var(--muted); margin-top: 6px; }
+.chat-response { font-style: italic; }
+.chat-replay-btn { width: 100%; flex: none; padding-block: 12px; letter-spacing: .01em; }
+
+@media (max-width: 480px) {
+  .chat-box { gap: 16px; }
+  .chat-bubble { max-width: calc(100% - 60px); }
+  .chat-avatar { width: 38px; height: 38px; font-size: 18px; }
+}
+</style>
 </head>
 <body>
 
@@ -351,6 +387,14 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
     <div class="mt-12">
       <div class="center small mt-6"><b>Spórolási cél teljesülése</b> — <span id="goalProgressLabel">0%</span></div>
       <div class="progress mt-10"><div class="bar" id="goalProgressBar" style="width:0%"></div></div>
+    </div>
+  </section>
+
+  <section class="card chat-card" aria-label="Apád–Anyád mini chat">
+    <h2>Apád–Anyád mini chat 💬</h2>
+    <div class="chat-box">
+      <div id="apadAnyadMessages" class="chat-messages" aria-live="polite" aria-atomic="false"></div>
+      <button id="replayChatBtn" class="btn blue chat-replay-btn" type="button">Újranyomom 🔁</button>
     </div>
   </section>
 
@@ -561,17 +605,41 @@ const negativeMessages=[
 ];
 
 /* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
+   ======================================================================= */
+const positiveMessages=[
+  "Szia Lajos, most épp egy lépéssel közelebb vagy a szabadsághoz.",
+  "Okos döntés, Lajos – még pár ilyen, és lesz nyaralásod is.",
+  "Spórolni nem menő, csak hasznos – és te most hasznos vagy.",
+  "A jövőbeli Lajos koccint rád egy ásványvízzel.",
+  "A bankszámlád hálás, még ha nem is tud beszélni.",
+  "Na látod, működik az önuralom, nem csak legenda.",
+  "Lassan, de biztosan, Lajos – a türelem forintot terem.",
+  "Egy kicsit most gazdagabb vagy, még ha csak lélekben is.",
+  "Szia Lajos, ez volt a felnőtt élet első jele.",
+  "Ha minden nap így döntesz, egyszer te leszel a motivációs poszt."
+];
+
+const negativeMessages=[
+  "Megvetted? Szép. A pénztárcád sír, de legalább te boldog vagy.",
+  "Szia Lajos, most megint eladtad a jövőd egy kávéért.",
+  "Gratulálok, a célod most épp hátrébb lépett kettőt.",
+  "Nem baj, legalább gazdagabb lettél tapasztalatban.",
+  "A spórolás várhat – mondta még senki, aki elérte a célját.",
+  "Lajos, a költekezés öröm – rövid távon.",
+  "Még egy ilyen döntés, és a célod már csak mese lesz.",
+  "Ha a pénz beszél, most épp azt mondta: viszlát.",
+  "Jó választás lenne… egy másik univerzumban.",
+  "Szia Lajos, a jövőbeli éned most épp kikapcsolta a Wi-Fit, hogy ne lássa ezt."
+];
+
+/* =======================================================================
    UI HELPERS
    ======================================================================= */
 const UI={
   snackTimer:null,
   coachTimer:null,
-  actionMessageTimer:null,
-  setTheme(theme){
-    const applied=API.setTheme(theme);
-    document.documentElement.setAttribute("data-theme",applied);
-    $("#themeToggle").checked=(applied==="dark");
-  },
+  setTheme(theme){document.documentElement.setAttribute("data-theme",theme);$("#themeToggle").checked=(theme==="dark");API.setTheme(theme)},
   snack(msg,withUndo,undoFn){
     const s=$("#snack");
     if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
@@ -595,30 +663,12 @@ const UI={
   coach(text){
     const b=$("#coach");
     if(this.coachTimer){clearTimeout(this.coachTimer); this.coachTimer=null;}
-    b.textContent="Szia Lajos!: "+text;
+    b.textContent="Apádhelyett Anyád: "+text;
     b.classList.add("show");
     this.coachTimer=setTimeout(()=>{
       b.classList.remove("show");
       this.coachTimer=null;
     },2400);
-  },
-  showActionMessage(kind){
-    const el=$("#funnyThreat");
-    if(!el) return;
-    const pool=kind==="positive"?positiveMessages:kind==="negative"?negativeMessages:[];
-    if(!pool.length) return;
-    if(this.actionMessageTimer){
-      clearTimeout(this.actionMessageTimer);
-      this.actionMessageTimer=null;
-    }
-    el.classList.remove("show");
-    void el.offsetWidth;
-    el.textContent=pool[Math.floor(Math.random()*pool.length)];
-    el.classList.add("show");
-    this.actionMessageTimer=setTimeout(()=>{
-      el.classList.remove("show");
-      this.actionMessageTimer=null;
-    },3600);
   }
 };
 
@@ -638,9 +688,10 @@ const App={
     this.bindGoals();
     this.bindProfileModal();
     this.bindShortcuts();
+    ChatSim.init();
     UI.setTheme(API.theme());
     const p=API.profile();
-    if(p){$("#welcomeScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");this.updateProfileIcon();this.syncCalcHello();}
+    if(p){$("#welcomeScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");this.updateProfileIcon();this.syncCalcHello();ChatSim.play();}
     this.setView("calc");
     this.renderResults();
     this.updateGoalsUI();
@@ -671,7 +722,7 @@ const App={
       API.saveProfile(profile);
       $("#profileSetupScreen").classList.add("hidden");
       $("#appScreen").classList.remove("hidden");
-      this.updateProfileIcon(); this.syncCalcHello();
+      this.updateProfileIcon(); this.syncCalcHello(); ChatSim.play();
     });
   },
 
@@ -898,6 +949,7 @@ const App={
   }
 };
 
+removeLegacyMiniChat();
 App.init();
 </script>
 </body>
