@@ -579,12 +579,7 @@ const negativeMessages=[
 const UI={
   snackTimer:null,
   coachTimer:null,
-  actionMessageTimer:null,
-  setTheme(theme){
-    const applied=API.setTheme(theme);
-    document.documentElement.setAttribute("data-theme",applied);
-    $("#themeToggle").checked=(applied==="dark");
-  },
+  setTheme(theme){document.documentElement.setAttribute("data-theme",theme);$("#themeToggle").checked=(theme==="dark");API.setTheme(theme)},
   snack(msg,withUndo,undoFn){
     const s=$("#snack");
     if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
@@ -608,30 +603,12 @@ const UI={
   coach(text){
     const b=$("#coach");
     if(this.coachTimer){clearTimeout(this.coachTimer); this.coachTimer=null;}
-    b.textContent="Szia Lajos!: "+text;
+    b.textContent="Apádhelyett Anyád: "+text;
     b.classList.add("show");
     this.coachTimer=setTimeout(()=>{
       b.classList.remove("show");
       this.coachTimer=null;
     },2400);
-  },
-  showActionMessage(kind){
-    const el=$("#funnyThreat");
-    if(!el) return;
-    const pool=kind==="positive"?positiveMessages:kind==="negative"?negativeMessages:[];
-    if(!pool.length) return;
-    if(this.actionMessageTimer){
-      clearTimeout(this.actionMessageTimer);
-      this.actionMessageTimer=null;
-    }
-    el.classList.remove("show");
-    void el.offsetWidth;
-    el.textContent=pool[Math.floor(Math.random()*pool.length)];
-    el.classList.add("show");
-    this.actionMessageTimer=setTimeout(()=>{
-      el.classList.remove("show");
-      this.actionMessageTimer=null;
-    },3600);
   }
 };
 
