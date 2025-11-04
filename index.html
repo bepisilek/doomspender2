@@ -55,6 +55,10 @@ body::after{bottom:-260px; left:-200px; background:radial-gradient(circle at cen
 
 /* Utils */
 .hidden{display:none !important}
+[id*="apadAnyad"],
+[class*="apad-anyad"],
+[data-feature*="apad-anyad"],
+[data-legacy*="apad-anyad"]{display:none !important}
 .center{text-align:center}
 .right{text-align:right}
 .bold{font-weight:900}
@@ -908,6 +912,7 @@ const App={
   }
 };
 
+removeLegacyMiniChat();
 App.init();
 </script>
 </body>
