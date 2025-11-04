@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Munkaóra — Apádhelyett Anyád 😏</title>
+<meta name="theme-color" content="#0b66ff" />
+<link rel="manifest" href="manifest.webmanifest" />
+<title>Munkaóra — Szia Lajos! 😏</title>
 <style>
 /* =======================================================================
    THEME TOKENS
@@ -65,6 +67,12 @@ body::after{bottom:-260px; left:-200px; background:radial-gradient(circle at cen
 .mt-12{margin-top:12px}
 .mt-16{margin-top:16px}
 .mt-20{margin-top:20px}
+.a2hs-pill{position:fixed;left:50%;bottom:24px;transform:translate(-50%,6px);display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:linear-gradient(135deg,var(--pill),rgba(255,255,255,.75));color:var(--text);box-shadow:0 16px 32px rgba(11,36,84,.18);backdrop-filter:blur(12px);z-index:1400;font-size:13px;font-weight:700;transition:opacity .25s ease,transform .25s ease;opacity:0;pointer-events:none}
+.a2hs-pill.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.a2hs-pill button{border:none;background:rgba(255,255,255,.85);color:var(--text);font-weight:800;border-radius:999px;padding:6px 12px;cursor:pointer;box-shadow:0 6px 18px rgba(11,36,84,.16);transition:transform .18s ease,box-shadow .18s ease}
+.a2hs-pill button:active{transform:scale(.97)}
+.a2hs-pill .close{background:transparent;color:var(--muted);box-shadow:none;padding:4px;font-size:14px}
+
 
 /* =======================================================================
    WELCOME
@@ -186,6 +194,8 @@ input:focus,select:focus,textarea:focus{border-color:color-mix(in srgb,var(--blu
 /* Undo snackbar */
 .snack{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#101828;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;z-index:1300}
 .snack button{background:#fff;color:#111;border:none;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer}
+.funny-threat{margin:18px auto 0;max-width:360px;padding:10px 16px;border-radius:14px;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid color-mix(in srgb,var(--line) 65%,transparent);box-shadow:0 12px 30px rgba(15,36,84,.08);font-size:12px;line-height:1.5;color:var(--muted);text-align:center;opacity:0;transform:translateY(6px);transition:opacity .28s ease,transform .28s ease;pointer-events:none}
+.funny-threat.show{opacity:1;transform:translateY(0)}
 
 /* Stats */
 .stat-legend{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 10px}
@@ -219,7 +229,7 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
   <div class="welcome-logo">⏰</div>
   <h1 class="welcome-title">Munkaóra</h1>
   <p class="welcome-subtitle">Tudd meg, hány munkaórádba kerülnek a dolgok, és hozz okosabb döntéseket!<br>
-    <span class="pill">+ Apádhelyett Anyád 😏</span>
+    <span class="pill">+ Szia Lajos! 😏</span>
   </p>
   <button class="welcome-btn" id="startBtn" aria-label="Kezdjük">Kezdjük! 🚀</button>
 </div>
@@ -352,7 +362,14 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
     </div>
   </section>
 
-  <footer class="mt-16">© 2025 Munkaóra • Apádhelyett Anyád 😏</footer>
+  <div id="funnyThreat" class="funny-threat" role="status" aria-live="polite"></div>
+  <div id="a2hsPill" class="a2hs-pill" role="dialog" aria-live="polite" aria-label="Add hozzá a Munkaóra appot">
+    <span>Hozzáadnád a Munkaóra appot a kezdőképernyődhöz?</span>
+    <button id="a2hsAction" type="button">Telepítés</button>
+    <button id="a2hsClose" class="close" type="button" aria-label="Bezárás">✕</button>
+  </div>
+
+  <footer class="mt-16">© 2025 Munkaóra • Szia Lajos! 😏</footer>
 
   <div id="coach" class="bubble" role="status" aria-live="polite"></div>
   <div id="snack" class="snack hidden"></div>
@@ -466,8 +483,17 @@ const API={
     Data.set(type,normalized);
   },
   clearLists:()=>{Data.set("saved",[]);Data.set("spent",[])},
-  theme:()=>Data.get("theme")||"light",
-  setTheme:(t)=>Data.set("theme",t),
+  theme:()=>{
+    const savedTheme=localStorage.getItem("theme");
+    if(savedTheme==="dark"||savedTheme==="light") return savedTheme;
+    if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+    return "light";
+  },
+  setTheme:(t)=>{
+    const next=t==="dark"?"dark":"light";
+    localStorage.setItem("theme",next);
+    return next;
+  },
   goals:()=>Data.get("goals")||{monthlyCap:0,savingGoal:0},
   saveGoals:(g)=>Data.set("goals",g),
   exportAll:()=>({__schema:schemaVersion,profile:API.profile(),saved:API.list("saved"),spent:API.list("spent"),goals:API.goals(),theme:API.theme()}),
@@ -478,7 +504,7 @@ const API={
     if(Array.isArray(obj.saved)) Data.set("saved",obj.saved);
     if(Array.isArray(obj.spent)) Data.set("spent",obj.spent);
     if(obj.goals) Data.set("goals",obj.goals);
-    if(obj.theme) Data.set("theme",obj.theme);
+    if(obj.theme) API.setTheme(obj.theme);
     Data.set("__schema",schemaVersion);
   }
 };
@@ -489,7 +515,7 @@ const API={
 const COACH=[
 "Ejnye, ezért most sokat fogsz dolgozni. 😬","A pénztárcád halk sírást hallatott. 💸","A jövőbeli éned most csóválja a fejét.",
 "Ha boldoggá tesz, oké – de sok órádba kerül.","Ez már a 'drága, de kell' kategória? 🤨","A bankszámlád szabadságra ment.",
-"10 órán túl? Anyád felhívna. 🫨","Legközelebb írd be: 'gondolkozzak még'.","A racionalitás most ebédel. 🍽️","Legalább szép lesz. Reméljük.",
+"10 órán túl? A jövőbeli Lajos felhívna. 🫨","Legközelebb írd be: 'gondolkozzak még'.","A racionalitás most ebédel. 🍽️","Legalább szép lesz. Reméljük.",
 "Ez egy hosszú műszak ára. ⏳","Instant dopamin, tartós mínusz. ⚡️","A lelkiismereted most offline.","Kávé helyett most dolgozol érte még párat.",
 "Nem muszáj, de megtetted. 😅","A matek nem tapsol most. 🧮","Ezen most a pénzügyi coach felszisszent.","Oké, de használd is naponta!",
 "A józan ész most AFK. 📴","Ha meghoznád újra ezt a döntést? Biztos?","Egy tétel, két sóhaj. 😮‍💨","Ez a 'szív döntött' vásárlás.",
@@ -502,7 +528,7 @@ const COACH=[
 "A spórolásod most levegőt vesz.","Kedves, de költséges.","A 'csak megnézem' után ez lett. 🛒","Én szóltam volna… ha kérdezel. 😉",
 "Egy tárgy, sok óra. Jó csere?","A fej számol, a szív vásárol.","Ha ezt bérben mérnénk, sok lenne.","Majd amikor jön a rezsi, emlékezz. 🧾",
 "Ez már 'felnőtt döntés' – ára van.","A bankod is látta ezt, ugye? 👀","Ha ez örömöt hoz, oké – de sokba került.","Instant jó érzés, késleltetett fájás.",
-"Nem baj, tanulópénz. Drága tanulópénz.","Anyai sóhaj: *hosszan*. 😮‍💨","Ha ezt eladnád később… kérdéses.","Ez már 'jó, de muszáj volt?' kategória.",
+"Nem baj, tanulópénz. Drága tanulópénz.","Pénzügyi sóhaj: *hosszan*. 😮‍💨","Ha ezt eladnád később… kérdéses.","Ez már 'jó, de muszáj volt?' kategória.",
 "Következőre írj listát. 📝","A határidők is integetnek most. ⏰","A spórolásod megbicsaklott.","A pénzed kicsit elszaladt kávézni. ☕",
 "Egy 'majd legközelebb' gomb hiányzott.","Ezt a döntést a jövőbeli te értékelni fogja? 🤔","Tarts egy 24 órás szabályt legközelebb.",
 "Most már legalább motivált vagy dolgozni. 😅","A költségvetésed kér egy meetinget. 📊","Ez kérem préselt munkaórákból készült. 🔧",
@@ -515,7 +541,36 @@ const COACH=[
 "Ha a munkád boldoggá tesz – megdolgoztál érte.","A jövőbeli számlák nem felejtenek.","A keret csipogott. 📉","A döntés megvan – most használd is, sokat!",
 "Minimum 10 óra – maximum öröm?","Ha ez inspirál: nyertél. Ha nem: tanultál.","Oké, de a következő legyen 'Megspórolom'.",
 "A bankod eddig bírta nevetés nélkül. 😬","Minden rendben – csak most kicsit drága lett.","A spórolásod most visszaszámol.",
-"Ezt még Anyád is megkérdezné: kellett?","Zárjuk le: használd egészséggel, okosan. ✅"
+"Ezt még a józan eszed is megkérdezné: kellett?","Zárjuk le: használd egészséggel, okosan. ✅"
+];
+
+/* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
+   ======================================================================= */
+const positiveMessages=[
+  "Szia Lajos, most épp egy lépéssel közelebb vagy a szabadsághoz.",
+  "Okos döntés, Lajos – még pár ilyen, és lesz nyaralásod is.",
+  "Spórolni nem menő, csak hasznos – és te most hasznos vagy.",
+  "A jövőbeli Lajos koccint rád egy ásványvízzel.",
+  "A bankszámlád hálás, még ha nem is tud beszélni.",
+  "Na látod, működik az önuralom, nem csak legenda.",
+  "Lassan, de biztosan, Lajos – a türelem forintot terem.",
+  "Egy kicsit most gazdagabb vagy, még ha csak lélekben is.",
+  "Szia Lajos, ez volt a felnőtt élet első jele.",
+  "Ha minden nap így döntesz, egyszer te leszel a motivációs poszt."
+];
+
+const negativeMessages=[
+  "Megvetted? Szép. A pénztárcád sír, de legalább te boldog vagy.",
+  "Szia Lajos, most megint eladtad a jövőd egy kávéért.",
+  "Gratulálok, a célod most épp hátrébb lépett kettőt.",
+  "Nem baj, legalább gazdagabb lettél tapasztalatban.",
+  "A spórolás várhat – mondta még senki, aki elérte a célját.",
+  "Lajos, a költekezés öröm – rövid távon.",
+  "Még egy ilyen döntés, és a célod már csak mese lesz.",
+  "Ha a pénz beszél, most épp azt mondta: viszlát.",
+  "Jó választás lenne… egy másik univerzumban.",
+  "Szia Lajos, a jövőbeli éned most épp kikapcsolta a Wi-Fit, hogy ne lássa ezt."
 ];
 
 /* =======================================================================
@@ -573,9 +628,9 @@ const App={
     this.bindGoals();
     this.bindProfileModal();
     this.bindShortcuts();
+    UI.setTheme(API.theme());
     const p=API.profile();
     if(p){$("#welcomeScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");this.updateProfileIcon();this.syncCalcHello();}
-    UI.setTheme(API.theme());
     this.setView("calc");
     this.renderResults();
     this.updateGoalsUI();
@@ -583,8 +638,16 @@ const App={
 
   /* ---------- Flow: Welcome → Profile ---------- */
   bindWelcome(){
-    $("#startBtn").addEventListener("click",()=>{$("#welcomeScreen").classList.add("hidden");$("#profileSetupScreen").classList.remove("hidden")});
-    $("#backToWelcome").addEventListener("click",()=>{$("#profileSetupScreen").classList.add("hidden");$("#welcomeScreen").classList.remove("hidden")});
+    const startBtn=$("#startBtn");
+    const backBtn=$("#backToWelcome");
+    if(startBtn) startBtn.addEventListener("click",()=>{
+      $("#welcomeScreen").classList.add("hidden");
+      $("#profileSetupScreen").classList.remove("hidden");
+    });
+    if(backBtn) backBtn.addEventListener("click",()=>{
+      $("#profileSetupScreen").classList.add("hidden");
+      $("#welcomeScreen").classList.remove("hidden");
+    });
   },
   bindProfileSetup(){
     $("#saveSetupProfile").addEventListener("click",()=>{
@@ -604,7 +667,7 @@ const App={
 
   /* ---------- Theme ---------- */
   bindTheme(){
-    const t=$("#themeToggle"); t.addEventListener("change",()=>UI.setTheme(t.checked?"dark":"light")); UI.setTheme(API.theme());
+    const t=$("#themeToggle"); t.addEventListener("change",()=>UI.setTheme(t.checked?"dark":"light"));
   },
 
   /* ---------- Tabs (no profile tab) ---------- */
@@ -645,6 +708,7 @@ const App={
       if(!name||!price){alert("Előbb számolj!");return;}
       API.add(type,{name,price,hours});
       this.state.lastAction={type,entry:{name,price,hours,at:now()}};
+      UI.showActionMessage(type==="saved"?"positive":"negative");
       $("#productName").value=""; $("#productPrice").value=""; r.classList.add("hidden");
       this.setView("results");
     };
@@ -824,7 +888,65 @@ const App={
   }
 };
 
+const A2HS=(()=>{
+  const sessionKey="a2hs-dismissed";
+  let deferred=null;
+  let pill=null;
+  let action=null;
+  let close=null;
+  const isStandalone=()=>{
+    return (window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||window.navigator.standalone===true;
+  };
+  const storage={
+    mark(){try{sessionStorage.setItem(sessionKey,"1");}catch(e){}},
+    dismissed(){try{return sessionStorage.getItem(sessionKey)==="1";}catch(e){return false;}}
+  };
+  const hide=()=>{if(pill) pill.classList.remove("show");};
+  const show=()=>{if(!pill||!deferred||storage.dismissed()) return; pill.classList.add("show");};
+  const bindInteractions=()=>{
+    if(!pill||!action||!close) return;
+    close.addEventListener("click",()=>{hide();storage.mark();});
+    action.addEventListener("click",async()=>{
+      hide();
+      storage.mark();
+      if(!deferred) return;
+      deferred.prompt();
+      try{await deferred.userChoice;}catch(e){}
+      deferred=null;
+    });
+  };
+  return{
+    init(){
+      if(isStandalone()) return;
+      pill=document.querySelector("#a2hsPill");
+      action=document.querySelector("#a2hsAction");
+      close=document.querySelector("#a2hsClose");
+      if(!pill||!action||!close) return;
+      bindInteractions();
+      window.addEventListener("beforeinstallprompt",(event)=>{
+        event.preventDefault();
+        deferred=event;
+        show();
+      });
+      window.addEventListener("appinstalled",()=>{storage.mark();hide();});
+    }
+  };
+})();
+
+const registerServiceWorker=()=>{
+  if(!("serviceWorker" in navigator)) return;
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").then((reg)=>{
+      console.info("Service worker registered:",reg.scope);
+    }).catch((err)=>{
+      console.error("Service worker registration failed:",err);
+    });
+  });
+};
+
 App.init();
+A2HS.init();
+registerServiceWorker();
 </script>
 </body>
 </html>
