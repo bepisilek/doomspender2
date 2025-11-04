@@ -606,12 +606,7 @@ const negativeMessages=[
 const UI={
   snackTimer:null,
   coachTimer:null,
-  actionMessageTimer:null,
-  setTheme(theme){
-    const applied=API.setTheme(theme);
-    document.documentElement.setAttribute("data-theme",applied);
-    $("#themeToggle").checked=(applied==="dark");
-  },
+  setTheme(theme){document.documentElement.setAttribute("data-theme",theme);$("#themeToggle").checked=(theme==="dark");API.setTheme(theme)},
   snack(msg,withUndo,undoFn){
     const s=$("#snack");
     if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
@@ -635,140 +630,12 @@ const UI={
   coach(text){
     const b=$("#coach");
     if(this.coachTimer){clearTimeout(this.coachTimer); this.coachTimer=null;}
-    b.textContent="Szia Lajos!: "+text;
+    b.textContent="Apádhelyett Anyád: "+text;
     b.classList.add("show");
     this.coachTimer=setTimeout(()=>{
       b.classList.remove("show");
       this.coachTimer=null;
     },2400);
-  },
-  showActionMessage(kind){
-    const el=$("#funnyThreat");
-    if(!el) return;
-    const pool=kind==="positive"?positiveMessages:kind==="negative"?negativeMessages:[];
-    if(!pool.length) return;
-    if(this.actionMessageTimer){
-      clearTimeout(this.actionMessageTimer);
-      this.actionMessageTimer=null;
-    }
-    el.classList.remove("show");
-    void el.offsetWidth;
-    el.textContent=pool[Math.floor(Math.random()*pool.length)];
-    el.classList.add("show");
-    this.actionMessageTimer=setTimeout(()=>{
-      el.classList.remove("show");
-      this.actionMessageTimer=null;
-    },3600);
-  }
-};
-
-const ChatSim={
-  container:null,
-  button:null,
-  timers:[],
-  init(){
-    if(!this.container) this.container=$("#apadAnyadMessages");
-    if(!this.button) this.button=$("#replayChatBtn");
-    if(!this.container||!this.button) return;
-    if(!this.button.dataset.bound){
-      this.button.addEventListener("click",()=>this.replay());
-      this.button.dataset.bound="1";
-    }
-    this.button.disabled=false;
-  },
-  formatTime(date){
-    return date.toLocaleTimeString("hu-HU",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  },
-  clearTimers(){
-    this.timers.forEach(clearTimeout);
-    this.timers=[];
-  },
-  reset(){
-    this.clearTimers();
-    if(this.container){
-      this.container.innerHTML="";
-      this.container.scrollTop=0;
-    }
-    if(this.button){
-      this.button.disabled=false;
-    }
-  },
-  queueMessage({role,text,time,delay,response}){
-    const timer=setTimeout(()=>{
-      if(!this.container) return;
-      const row=document.createElement("div");
-      row.className=`chat-message ${role==="dad"?"from-dad":"from-mom"}`;
-      const avatar=document.createElement("div");
-      avatar.className="chat-avatar";
-      avatar.textContent=role==="dad"?"🧔":"👩";
-      const bubble=document.createElement("div");
-      bubble.className="chat-bubble";
-      const textEl=document.createElement("div");
-      textEl.className="chat-text";
-      textEl.textContent=text;
-      const timeEl=document.createElement("span");
-      timeEl.className="chat-timestamp";
-      timeEl.textContent=time;
-      bubble.append(textEl,timeEl);
-      if(response && role!=="dad"){
-        const resp=document.createElement("span");
-        resp.className="chat-response";
-        resp.textContent=`válaszidő: ${response} mp`;
-        bubble.appendChild(resp);
-      }
-      if(role==="dad"){
-        row.append(bubble,avatar);
-      }else{
-        row.append(avatar,bubble);
-      }
-      this.container.appendChild(row);
-      this.container.scrollTop=this.container.scrollHeight;
-      const vanishTimer=setTimeout(()=>{
-        if(!row.isConnected) return;
-        row.classList.add("chat-hide");
-        const removeTimer=setTimeout(()=>{
-          if(row.parentElement){
-            row.remove();
-          }
-        },320);
-        this.timers.push(removeTimer);
-      },3000);
-      this.timers.push(vanishTimer);
-    },delay);
-    this.timers.push(timer);
-  },
-  play(){
-    this.init();
-    if(!this.container||!this.button) return;
-    this.reset();
-    this.button.disabled=true;
-    const base=new Date(); base.setHours(13,37,0,0);
-    const momDelayMs=1000+Math.random()*1000;
-    const responseLabel=(1+Math.random()*2).toFixed(1);
-    const momTime=new Date(base.getTime()+momDelayMs);
-    this.queueMessage({
-      role:"dad",
-      text:"apád: „Na, kiscsillag, számolt a kalkulátor?”",
-      time:this.formatTime(base),
-      delay:180
-    });
-    this.queueMessage({
-      role:"mom",
-      text:"anyád: „Persze, most nézem a munkaóráidat!”",
-      time:this.formatTime(momTime),
-      delay:momDelayMs,
-      response:responseLabel
-    });
-    const totalDuration=momDelayMs+3300;
-    const doneTimer=setTimeout(()=>{
-      if(this.button){
-        this.button.disabled=false;
-      }
-    },totalDuration);
-    this.timers.push(doneTimer);
-  },
-  replay(){
-    this.play();
   }
 };
 
