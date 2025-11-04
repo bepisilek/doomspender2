@@ -131,6 +131,7 @@ h1 { font-size:26px; font-weight:800; margin:0; }
   color:var(--text);
   font-weight:700; font-size:13px;
   padding:10px 0;
+  cursor:pointer;
 }
 .tab.active {
   background:var(--blue); color:#fff;
@@ -225,7 +226,7 @@ footer {
     <div class="welcome-logo">⏰</div>
     <h1 class="welcome-title">Munkaóra</h1>
     <p class="welcome-subtitle">Tudd meg, hány munkaórádba kerülnek a dolgok, és hozz okosabb döntéseket!</p>
-    <button class="welcome-btn" onclick="enterApp()">Kezdjük! 🚀</button>
+    <button class="welcome-btn" id="enterAppBtn">Kezdjük! 🚀</button>
   </div>
 
   <!-- MAIN APP -->
@@ -339,12 +340,6 @@ footer {
   </div>
 
 <script>
-/* ================== WELCOME SCREEN ================== */
-function enterApp() {
-  document.getElementById("welcomeScreen").classList.add("hidden");
-  document.getElementById("mainApp").classList.remove("hidden");
-}
-
 /* ================== UTIL + DATA ================== */
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
@@ -356,17 +351,26 @@ const Data = {
   clear(){ ["profile","saved","spent"].forEach(k=>localStorage.removeItem(k)) }
 };
 
+/* ================== WELCOME SCREEN ================== */
+const enterBtn = $("#enterAppBtn");
+if(enterBtn) {
+  enterBtn.addEventListener("click", function() {
+    $("#welcomeScreen").classList.add("hidden");
+    $("#mainApp").classList.remove("hidden");
+  });
+}
+
 /* ================== THEME ================== */
 const themeToggle = $("#themeToggle");
 const modeLabel = $("#modeLabel");
 function applyTheme(theme){
   document.documentElement.setAttribute("data-theme", theme);
-  themeToggle.checked = theme==="dark";
-  modeLabel.textContent = theme==="dark" ? "Sötét" : "Világos";
+  if(themeToggle) themeToggle.checked = theme==="dark";
+  if(modeLabel) modeLabel.textContent = theme==="dark" ? "Sötét" : "Világos";
   localStorage.setItem("theme", theme);
 }
 applyTheme(localStorage.getItem("theme") || "light");
-themeToggle.addEventListener("change", ()=> applyTheme(themeToggle.checked?"dark":"light"));
+if(themeToggle) themeToggle.addEventListener("change", ()=> applyTheme(themeToggle.checked?"dark":"light"));
 
 /* ================== TABS / VIEWS ================== */
 const tabs = $$(".tab");
@@ -440,8 +444,8 @@ function deleteProfile(){
   Data.clear(); nameEl.value=ageEl.value=salaryEl.value=hoursEl.value="";
   setView("profile");
 }
-saveBtn.addEventListener("click", saveProfile);
-delBtn.addEventListener("click", deleteProfile);
+if(saveBtn) saveBtn.addEventListener("click", saveProfile);
+if(delBtn) delBtn.addEventListener("click", deleteProfile);
 
 /* ================== CALCULATOR ================== */
 const hello=$("#hello"), hourlyHint=$("#hourlyHint");
@@ -451,8 +455,8 @@ const saveChoice=$("#saveBtn"), buyChoice=$("#buyBtn");
 
 function syncHello(){
   const p = Data.get("profile");
-  if(!p){ hello.textContent="Szia! Töltsd ki a profilod a pontos számításhoz."; return; }
-  hello.innerHTML = `Szia <b>${esc(p.name||"")}</b>! Nézzük meg, hány órádba kerülne.`;
+  if(!p){ if(hello) hello.textContent="Szia! Töltsd ki a profilod a pontos számításhoz."; return; }
+  if(hello) hello.innerHTML = `Szia <b>${esc(p.name||"")}</b>! Nézzük meg, hány órádba kerülne.`;
 }
 function calculate(){
   const p = Data.get("profile");
@@ -463,12 +467,12 @@ function calculate(){
   const hourly = p.salary / (p.hours*4);
   if(!hourly || hourly<=0){ alert("Érvénytelen profil adatok."); return; }
   const h = price / hourly;
-  hourlyHint.textContent = `Jelenlegi órabéred ~ ${fmtFt(hourly)}/óra`;
-  hoursText.textContent = `Kb. ${h.toFixed(1)} munkaórádba kerülne (${fmtFt(price)}).`;
+  if(hourlyHint) hourlyHint.textContent = `Jelenlegi órabéred ~ ${fmtFt(hourly)}/óra`;
+  if(hoursText) hoursText.textContent = `Kb. ${h.toFixed(1)} munkaórádba kerülne (${fmtFt(price)}).`;
   calcResult.dataset.name=name; calcResult.dataset.price=String(price); calcResult.dataset.hours=String(h);
   calcResult.classList.remove("hidden");
 }
-calcBtn.addEventListener("click", calculate);
+if(calcBtn) calcBtn.addEventListener("click", calculate);
 
 function commit(type){
   const name = calcResult.dataset.name;
@@ -480,14 +484,16 @@ function commit(type){
   Data.set(type, list);
   if(type==="spent" && hours>10){ showCoach(); } else { setView("results"); }
 }
-saveChoice.addEventListener("click", ()=>commit("saved"));
-buyChoice.addEventListener("click", ()=>commit("spent"));
+if(saveChoice) saveChoice.addEventListener("click", ()=>commit("saved"));
+if(buyChoice) buyChoice.addEventListener("click", ()=>commit("spent"));
 
 function showCoach(){
   const b=$("#coach");
-  b.textContent="Apádhelyett Anyád: " + COACH[Math.floor(Math.random()*COACH.length)];
-  b.classList.remove("hidden");
-  setTimeout(()=>{ b.classList.add("hidden"); setView("results"); }, 2400);
+  if(b) {
+    b.textContent="Apádhelyett Anyád: " + COACH[Math.floor(Math.random()*COACH.length)];
+    b.classList.remove("hidden");
+    setTimeout(()=>{ b.classList.add("hidden"); setView("results"); }, 2400);
+  }
 }
 
 /* ================== RESULTS ================== */
@@ -497,22 +503,17 @@ const clearAll=$("#clearAll");
 
 function renderResults(){
   const saved=Data.get("saved")||[], spent=Data.get("spent")||[];
-  savedList.innerHTML=""; spentList.innerHTML="";
+  if(savedList) savedList.innerHTML="";
+  if(spentList) spentList.innerHTML="";
   let s=0,e=0;
   saved.forEach((it,idx)=>{
     s+=Number(it.price);
     const li=document.createElement("li"); li.className="item";
     li.innerHTML=`<span><span class="badge b-green">spórolt</span> <span class="name">${esc(it.name)}</span></span>
                   <span class="price">${fmtFt(it.price)}</span>`;
-    savedList.appendChild(li);
+    if(savedList) savedList.appendChild(li);
   });
   spent.forEach((it,idx)=>{
     e+=Number(it.price);
     const li=document.createElement("li"); li.className="item";
-    li.innerHTML=`<span><span class="badge b-red">vett</span> <span class="name">${esc(it.name)}</span></span>
-                  <span class="price">${fmtFt(it.price)}</span>`;
-    spentList.appendChild(li);
-  });
-  totalSaved.textContent=fmtFt(s);
-  totalSpent.textContent=fmtFt(e);
-  net.textContent
+    li.innerHTML=`<span><span class="badge b-red">vett</span> <span class="name">${esc(it.name)}</span></span
