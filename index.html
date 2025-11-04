@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Munkaóra — Apádhelyett Anyád 😏</title>
+<title>Munkaóra — Szia Lajos! 😏</title>
 <style>
 /* =======================================================================
    THEME TOKENS
@@ -186,6 +186,8 @@ input:focus,select:focus,textarea:focus{border-color:color-mix(in srgb,var(--blu
 /* Undo snackbar */
 .snack{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#101828;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;z-index:1300}
 .snack button{background:#fff;color:#111;border:none;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer}
+.funny-threat{margin:18px auto 0;max-width:360px;padding:10px 16px;border-radius:14px;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid color-mix(in srgb,var(--line) 65%,transparent);box-shadow:0 12px 30px rgba(15,36,84,.08);font-size:12px;line-height:1.5;color:var(--muted);text-align:center;opacity:0;transform:translateY(6px);transition:opacity .28s ease,transform .28s ease;pointer-events:none}
+.funny-threat.show{opacity:1;transform:translateY(0)}
 
 /* Stats */
 .stat-legend{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 10px}
@@ -209,6 +211,38 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
 /* Tiny helpers for long screens */
 .sep{height:8px}
 </style>
+<style>
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-card { text-align: center; padding-top: 26px; padding-bottom: 28px; }
+.chat-card h2 { margin-bottom: 10px; font-size: 18px; }
+.chat-box { width: min(100%, 460px); margin: 0 auto; display: flex; flex-direction: column; gap: 18px; font-family: "Inter", sans-serif; }
+.chat-messages { display: flex; flex-direction: column; gap: 14px; align-items: stretch; text-align: left; min-height: 140px; }
+.chat-message { display: flex; align-items: flex-end; gap: 12px; opacity: 0; animation: fadeSlideIn .45s ease forwards; transition: opacity .3s ease, transform .3s ease; }
+.chat-message.from-dad { justify-content: flex-end; }
+.chat-message.from-mom { justify-content: flex-start; }
+.chat-message.chat-hide { opacity: 0; transform: translateY(-8px); }
+.chat-avatar { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; box-shadow: 0 8px 18px rgba(15, 23, 42, .12); background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(242,246,255,.68)); }
+.chat-message.from-dad .chat-avatar { background: linear-gradient(135deg, rgba(11,102,255,.75), rgba(75,141,255,.8)); color: #fff; }
+.chat-bubble { max-width: calc(100% - 76px); padding: 12px 16px; border-radius: 18px; box-shadow: 0 10px 28px rgba(15, 36, 84, .12); background: linear-gradient(135deg, rgba(238,242,255,.88), rgba(255,255,255,.92)); color: var(--text); }
+.chat-message.from-mom .chat-bubble { background: linear-gradient(135deg, rgba(148,163,184,.18), rgba(203,213,225,.32)); }
+.chat-message.from-dad .chat-bubble { background: linear-gradient(135deg, rgba(11,102,255,.18), rgba(75,141,255,.32)); }
+.chat-message.from-dad .chat-bubble { border-bottom-right-radius: 6px; }
+.chat-message.from-mom .chat-bubble { border-bottom-left-radius: 6px; }
+.chat-text { font-weight: 600; line-height: 1.5; }
+.chat-timestamp, .chat-response { display: block; font-size: 11px; color: var(--muted); margin-top: 6px; }
+.chat-response { font-style: italic; }
+.chat-replay-btn { width: 100%; flex: none; padding-block: 12px; letter-spacing: .01em; }
+
+@media (max-width: 480px) {
+  .chat-box { gap: 16px; }
+  .chat-bubble { max-width: calc(100% - 60px); }
+  .chat-avatar { width: 38px; height: 38px; font-size: 18px; }
+}
+</style>
 </head>
 <body>
 
@@ -219,7 +253,7 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
   <div class="welcome-logo">⏰</div>
   <h1 class="welcome-title">Munkaóra</h1>
   <p class="welcome-subtitle">Tudd meg, hány munkaórádba kerülnek a dolgok, és hozz okosabb döntéseket!<br>
-    <span class="pill">+ Apádhelyett Anyád 😏</span>
+    <span class="pill">+ Szia Lajos! 😏</span>
   </p>
   <button class="welcome-btn" id="startBtn" aria-label="Kezdjük">Kezdjük! 🚀</button>
 </div>
@@ -352,7 +386,17 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
     </div>
   </section>
 
-  <footer class="mt-16">© 2025 Munkaóra • Apádhelyett Anyád 😏</footer>
+  <section class="card chat-card" aria-label="Apád–Anyád mini chat">
+    <h2>Apád–Anyád mini chat 💬</h2>
+    <div class="chat-box">
+      <div id="apadAnyadMessages" class="chat-messages" aria-live="polite" aria-atomic="false"></div>
+      <button id="replayChatBtn" class="btn blue chat-replay-btn" type="button">Újranyomom 🔁</button>
+    </div>
+  </section>
+
+  <div id="funnyThreat" class="funny-threat" role="status" aria-live="polite"></div>
+
+  <footer class="mt-16">© 2025 Munkaóra • Szia Lajos! 😏</footer>
 
   <div id="coach" class="bubble" role="status" aria-live="polite"></div>
   <div id="snack" class="snack hidden"></div>
@@ -466,8 +510,17 @@ const API={
     Data.set(type,normalized);
   },
   clearLists:()=>{Data.set("saved",[]);Data.set("spent",[])},
-  theme:()=>Data.get("theme")||"light",
-  setTheme:(t)=>Data.set("theme",t),
+  theme:()=>{
+    const savedTheme=localStorage.getItem("theme");
+    if(savedTheme==="dark"||savedTheme==="light") return savedTheme;
+    if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+    return "light";
+  },
+  setTheme:(t)=>{
+    const next=t==="dark"?"dark":"light";
+    localStorage.setItem("theme",next);
+    return next;
+  },
   goals:()=>Data.get("goals")||{monthlyCap:0,savingGoal:0},
   saveGoals:(g)=>Data.set("goals",g),
   exportAll:()=>({__schema:schemaVersion,profile:API.profile(),saved:API.list("saved"),spent:API.list("spent"),goals:API.goals(),theme:API.theme()}),
@@ -478,7 +531,7 @@ const API={
     if(Array.isArray(obj.saved)) Data.set("saved",obj.saved);
     if(Array.isArray(obj.spent)) Data.set("spent",obj.spent);
     if(obj.goals) Data.set("goals",obj.goals);
-    if(obj.theme) Data.set("theme",obj.theme);
+    if(obj.theme) API.setTheme(obj.theme);
     Data.set("__schema",schemaVersion);
   }
 };
@@ -516,6 +569,35 @@ const COACH=[
 "Minimum 10 óra – maximum öröm?","Ha ez inspirál: nyertél. Ha nem: tanultál.","Oké, de a következő legyen 'Megspórolom'.",
 "A bankod eddig bírta nevetés nélkül. 😬","Minden rendben – csak most kicsit drága lett.","A spórolásod most visszaszámol.",
 "Ezt még Anyád is megkérdezné: kellett?","Zárjuk le: használd egészséggel, okosan. ✅"
+];
+
+/* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
+   ======================================================================= */
+const positiveMessages=[
+  "Szia Lajos, most épp egy lépéssel közelebb vagy a szabadsághoz.",
+  "Okos döntés, Lajos – még pár ilyen, és lesz nyaralásod is.",
+  "Spórolni nem menő, csak hasznos – és te most hasznos vagy.",
+  "A jövőbeli Lajos koccint rád egy ásványvízzel.",
+  "A bankszámlád hálás, még ha nem is tud beszélni.",
+  "Na látod, működik az önuralom, nem csak legenda.",
+  "Lassan, de biztosan, Lajos – a türelem forintot terem.",
+  "Egy kicsit most gazdagabb vagy, még ha csak lélekben is.",
+  "Szia Lajos, ez volt a felnőtt élet első jele.",
+  "Ha minden nap így döntesz, egyszer te leszel a motivációs poszt."
+];
+
+const negativeMessages=[
+  "Megvetted? Szép. A pénztárcád sír, de legalább te boldog vagy.",
+  "Szia Lajos, most megint eladtad a jövőd egy kávéért.",
+  "Gratulálok, a célod most épp hátrébb lépett kettőt.",
+  "Nem baj, legalább gazdagabb lettél tapasztalatban.",
+  "A spórolás várhat – mondta még senki, aki elérte a célját.",
+  "Lajos, a költekezés öröm – rövid távon.",
+  "Még egy ilyen döntés, és a célod már csak mese lesz.",
+  "Ha a pénz beszél, most épp azt mondta: viszlát.",
+  "Jó választás lenne… egy másik univerzumban.",
+  "Szia Lajos, a jövőbeli éned most épp kikapcsolta a Wi-Fit, hogy ne lássa ezt."
 ];
 
 /* =======================================================================
@@ -573,9 +655,10 @@ const App={
     this.bindGoals();
     this.bindProfileModal();
     this.bindShortcuts();
-    const p=API.profile();
-    if(p){$("#welcomeScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");this.updateProfileIcon();this.syncCalcHello();}
+    ChatSim.init();
     UI.setTheme(API.theme());
+    const p=API.profile();
+    if(p){$("#welcomeScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");this.updateProfileIcon();this.syncCalcHello();ChatSim.play();}
     this.setView("calc");
     this.renderResults();
     this.updateGoalsUI();
@@ -598,13 +681,13 @@ const App={
       API.saveProfile(profile);
       $("#profileSetupScreen").classList.add("hidden");
       $("#appScreen").classList.remove("hidden");
-      this.updateProfileIcon(); this.syncCalcHello();
+      this.updateProfileIcon(); this.syncCalcHello(); ChatSim.play();
     });
   },
 
   /* ---------- Theme ---------- */
   bindTheme(){
-    const t=$("#themeToggle"); t.addEventListener("change",()=>UI.setTheme(t.checked?"dark":"light")); UI.setTheme(API.theme());
+    const t=$("#themeToggle"); t.addEventListener("change",()=>UI.setTheme(t.checked?"dark":"light"));
   },
 
   /* ---------- Tabs (no profile tab) ---------- */
@@ -645,6 +728,7 @@ const App={
       if(!name||!price){alert("Előbb számolj!");return;}
       API.add(type,{name,price,hours});
       this.state.lastAction={type,entry:{name,price,hours,at:now()}};
+      UI.showActionMessage(type==="saved"?"positive":"negative");
       $("#productName").value=""; $("#productPrice").value=""; r.classList.add("hidden");
       this.setView("results");
     };
