@@ -340,180 +340,440 @@ footer {
   </div>
 
 <script>
-/* ================== UTIL + DATA ================== */
-const $ = sel => document.querySelector(sel);
-const $$ = sel => [...document.querySelectorAll(sel)];
-const fmtFt = v => new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(Number(v||0));
-const esc = s => (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
-const Data = {
-  get(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null }catch(e){ return null } },
-  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true }catch(e){ return false } },
-  clear(){ ["profile","saved","spent"].forEach(k=>localStorage.removeItem(k)) }
-};
-
-/* ================== WELCOME SCREEN ================== */
-const enterBtn = $("#enterAppBtn");
-if(enterBtn) {
-  enterBtn.addEventListener("click", function() {
-    $("#welcomeScreen").classList.add("hidden");
-    $("#mainApp").classList.remove("hidden");
-  });
-}
-
-/* ================== THEME ================== */
-const themeToggle = $("#themeToggle");
-const modeLabel = $("#modeLabel");
-function applyTheme(theme){
-  document.documentElement.setAttribute("data-theme", theme);
-  if(themeToggle) themeToggle.checked = theme==="dark";
-  if(modeLabel) modeLabel.textContent = theme==="dark" ? "Sötét" : "Világos";
-  localStorage.setItem("theme", theme);
-}
-applyTheme(localStorage.getItem("theme") || "light");
-if(themeToggle) themeToggle.addEventListener("change", ()=> applyTheme(themeToggle.checked?"dark":"light"));
-
-/* ================== TABS / VIEWS ================== */
-const tabs = $$(".tab");
-const views = {
-  profile: $("#view-profile"),
-  calc: $("#view-calc"),
-  results: $("#view-results"),
-  stats: $("#view-stats"),
-};
-function setView(name){
-  tabs.forEach(t=>t.classList.toggle("active", t.dataset.view===name));
-  Object.entries(views).forEach(([k,el])=> el.classList.toggle("hidden", k!==name));
-  if(name==="calc") syncHello();
-  if(name==="results") renderResults();
-  if(name==="stats") drawStats();
-  window.scrollTo({top:0, behavior:"smooth"});
-}
-tabs.forEach(t=> t.addEventListener("click", ()=> setView(t.dataset.view)));
-$$('[data-view="calc"]').forEach(btn=> btn.addEventListener("click", ()=> setView("calc")));
-
-/* ================== COACH MESSAGES (100+) ================== */
-const COACH = [
-"Ejnye, ezért most sokat fogsz dolgozni. 😬","A pénztárcád halk sírást hallatott. 💸","A jövőbeli éned most csóválja a fejét.",
-"Ha boldoggá tesz, oké – de sok órádba kerül.","Ez már a 'drága, de kell' kategória? 🤨","A bankszámlád szabadságra ment.",
-"10 órán túl? Anyád felhívna. 🫨","Legközelebb írd be: 'gondolkozzak még'.","A racionalitás most ebédel. 🍽️","Legalább szép lesz. Reméljük.",
-"Ez egy hosszú műszak ára. ⏳","Instant dopamin, tartós mínusz. ⚡️","A lelkiismereted most offline.","Kávé helyett most dolgozol érte még párat.",
-"Nem muszáj, de megtetted. 😅","A matek nem tapsol most. 🧮","Ezen most a pénzügyi coach felszisszent.","Oké, de használd is naponta!",
-"A józan ész most AFK. 📴","Ha meghoznád újra ezt a döntést? Biztos?","Egy tétel, két sóhaj. 😮‍💨","Ez a 'szív döntött' vásárlás.",
-"Minimum egy hétvége ment rá.","Nem rossz, csak… drága.","Ha akciós volt, kicsit kevésbé fáj.","A 'majd visszateszem' gomb letiltva? 😏",
-"Ezt a döntést screenshotolom a tanmeséhez. 📸","Kis lépés a tárgy felé, nagy lépés a mínuszba.","Érzed azt a kis bökést? Az a bankkártya. 💳",
-"Na… legalább sztori lesz. 📖","A spórolás most szünetel. 🧘","Ha ezt megspóroltad volna…","Ez már 'luxus-szagú' döntés. 💎",
-"A jövő heti ebéded integet. 🍝","10+ óra? Ez már szerelem.","Tudod, hogy ezért túlórázol majd?","A költségvetésed most kér egy ölelést.",
-"Ez a vásárlás beszélgetést érdemel.","A mérleg: öröm + bűntudat = egyenleg?","Az ész helyett a szem döntött. 👀","Valaki most nagyon boldog (a kereskedő).",
-"Reméljük legalább tartós.","Ha ez motivál a munkára – rendben. 💪","Pénzügyi edzés: ma farizom + pénztárca.","Ezt a 'szükséges' szót feszegetjük.",
-"A spórolásod most levegőt vesz.","Kedves, de költséges.","A 'csak megnézem' után ez lett. 🛒","Én szóltam volna… ha kérdezel. 😉",
-"Egy tárgy, sok óra. Jó csere?","A fej számol, a szív vásárol.","Ha ezt bérben mérnénk, sok lenne.","Majd amikor jön a rezsi, emlékezz. 🧾",
-"Ez már 'felnőtt döntés' – ára van.","A bankod is látta ezt, ugye? 👀","Ha ez örömöt hoz, oké – de sokba került.","Instant jó érzés, késleltetett fájás.",
-"Nem baj, tanulópénz. Drága tanulópénz.","Anyai sóhaj: *hosszan*. 😮‍💨","Ha ezt eladnád később… kérdéses.","Ez már 'jó, de muszáj volt?' kategória.",
-"Következőre írj listát. 📝","A határidők is integetnek most. ⏰","A spórolásod megbicsaklott.","A pénzed kicsit elszaladt kávézni. ☕",
-"Egy 'majd legközelebb' gomb hiányzott.","Ezt a döntést a jövőbeli te értékelni fogja? 🤔","Tarts egy 24 órás szabályt legközelebb.",
-"Most már legalább motivált vagy dolgozni. 😅","A költségvetésed kér egy meetinget. 📊","Ez kérem préselt munkaórákból készült. 🔧",
-"A hitelkártyád halkan remeg.","Ez az élmény reméljük nem múló.","Ha ezt egyszerűen 'kellett' – jó van.","Az ész: 'nem', a vágy: 'igen'.",
-"A pénzügyi határ most kicsit csúszott.","A 'spórolom' gomb is ott volt ám.","Kicsit több lett, mint 'apró'.","Legalább kipipálhatsz valamit a listán.",
-"Gondold át: 10+ óra = ez a tárgy.","A kompromisszumok drágák.","A minimalizmus most elfordult. 🧘‍♂️","Na jól van, de most spórolós hét jön!",
-"A pénzügyi én-ed most sír.","Ha ez hobbi: oké. Ha hóbort: kétszer gondold át.","A 'miért' erősebb volt, mint a 'mennyi'.",
-"Egy kis bűntudat, egy nagy doboz. 📦","Közelebb kerültél hozzá – a bankszámla távolabb.","Az ár-érték arány most vitatott.",
-"Ez a 'megérdemlem' pillanat?","Jutalomvásárlás? Akkor hajrá – ritkán.","A türelem gyakran olcsóbb. ⏳","A 'most azonnal kell' a legdrágább.",
-"Ha a munkád boldoggá tesz – megdolgoztál érte.","A jövőbeli számlák nem felejtenek.","A keret csipogott. 📉","A döntés megvan – most használd is, sokat!",
-"Minimum 10 óra – maximum öröm?","Ha ez inspirál: nyertél. Ha nem: tanultál.","Oké, de a következő legyen 'Megspórolom'.",
-"A bankod eddig bírta nevetés nélkül. 😬","Minden rendben – csak most kicsit drága lett.","A spórolásod most visszaszámol.",
-"Ezt még Anyád is megkérdezné: kellett?","Zárjuk le: használd egészséggel, okosan. ✅"
-];
-
-/* ================== PROFILE ================== */
-const nameEl=$("#name"), ageEl=$("#age"), salaryEl=$("#salary"), hoursEl=$("#hours");
-const saveBtn=$("#saveProfile"), delBtn=$("#deleteProfile");
-function loadProfile(){
-  const p = Data.get("profile"); if(!p) return;
-  nameEl.value=p.name||""; ageEl.value=p.age||""; salaryEl.value=p.salary||""; hoursEl.value=p.hours||"";
-}
-function saveProfile(){
-  const p = { name: nameEl.value.trim(), age: Number(ageEl.value), salary: Number(salaryEl.value), hours: Number(hoursEl.value) };
-  if(!p.name || !p.age || !p.salary || !p.hours){ alert("Tölts ki minden mezőt!"); return; }
-  Data.set("profile", p);
-  if(!Data.get("saved")) Data.set("saved", []);
-  if(!Data.get("spent")) Data.set("spent", []);
-  setView("calc");
-}
-function deleteProfile(){
-  if(!confirm("Biztos törlöd a profilodat és a listákat?")) return;
-  Data.clear(); nameEl.value=ageEl.value=salaryEl.value=hoursEl.value="";
-  setView("profile");
-}
-if(saveBtn) saveBtn.addEventListener("click", saveProfile);
-if(delBtn) delBtn.addEventListener("click", deleteProfile);
-
-/* ================== CALCULATOR ================== */
-const hello=$("#hello"), hourlyHint=$("#hourlyHint");
-const productName=$("#productName"), productPrice=$("#productPrice");
-const calcBtn=$("#calculateBtn"), calcResult=$("#calcResult"), hoursText=$("#workHoursText");
-const saveChoice=$("#saveBtn"), buyChoice=$("#buyBtn");
-
-function syncHello(){
-  const p = Data.get("profile");
-  if(!p){ if(hello) hello.textContent="Szia! Töltsd ki a profilod a pontos számításhoz."; return; }
-  if(hello) hello.innerHTML = `Szia <b>${esc(p.name||"")}</b>! Nézzük meg, hány órádba kerülne.`;
-}
-function calculate(){
-  const p = Data.get("profile");
-  if(!p){ setView("profile"); return; }
-  const name = productName.value.trim();
-  const price = Number(productPrice.value);
-  if(!name || !price || price<=0){ alert("Add meg a termék nevét és árát!"); return; }
-  const hourly = p.salary / (p.hours*4);
-  if(!hourly || hourly<=0){ alert("Érvénytelen profil adatok."); return; }
-  const h = price / hourly;
-  if(hourlyHint) hourlyHint.textContent = `Jelenlegi órabéred ~ ${fmtFt(hourly)}/óra`;
-  if(hoursText) hoursText.textContent = `Kb. ${h.toFixed(1)} munkaórádba kerülne (${fmtFt(price)}).`;
-  calcResult.dataset.name=name; calcResult.dataset.price=String(price); calcResult.dataset.hours=String(h);
-  calcResult.classList.remove("hidden");
-}
-if(calcBtn) calcBtn.addEventListener("click", calculate);
-
-function commit(type){
-  const name = calcResult.dataset.name;
-  const price = Number(calcResult.dataset.price);
-  const hours = Number(calcResult.dataset.hours);
-  if(!name || !price){ alert("Előbb számolj!"); return; }
-  const list = Data.get(type)||[];
-  list.unshift({name, price, hours, at: Date.now(), type});
-  Data.set(type, list);
-  if(type==="spent" && hours>10){ showCoach(); } else { setView("results"); }
-}
-if(saveChoice) saveChoice.addEventListener("click", ()=>commit("saved"));
-if(buyChoice) buyChoice.addEventListener("click", ()=>commit("spent"));
-
-function showCoach(){
-  const b=$("#coach");
-  if(b) {
-    b.textContent="Apádhelyett Anyád: " + COACH[Math.floor(Math.random()*COACH.length)];
-    b.classList.remove("hidden");
-    setTimeout(()=>{ b.classList.add("hidden"); setView("results"); }, 2400);
+// ================== DATA LAYER (backend-ready) ==================
+const DataAPI = {
+  // LocalStorage implementation (can be replaced with fetch() calls to backend)
+  storage: {
+    get: function(key) {
+      try {
+        const val = localStorage.getItem(key);
+        return val ? JSON.parse(val) : null;
+      } catch(e) {
+        console.error('Storage get error:', e);
+        return null;
+      }
+    },
+    set: function(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch(e) {
+        console.error('Storage set error:', e);
+        return false;
+      }
+    },
+    remove: function(key) {
+      try {
+        localStorage.removeItem(key);
+        return true;
+      } catch(e) {
+        console.error('Storage remove error:', e);
+        return false;
+      }
+    }
+  },
+  
+  // Profile methods
+  getProfile: function() {
+    return this.storage.get('profile');
+  },
+  saveProfile: function(data) {
+    return this.storage.set('profile', data);
+  },
+  deleteProfile: function() {
+    this.storage.remove('profile');
+    this.storage.remove('saved');
+    this.storage.remove('spent');
+    return true;
+  },
+  
+  // Items methods
+  getSaved: function() {
+    return this.storage.get('saved') || [];
+  },
+  getSpent: function() {
+    return this.storage.get('spent') || [];
+  },
+  addItem: function(type, item) {
+    const list = this.storage.get(type) || [];
+    list.unshift({...item, at: Date.now(), type});
+    return this.storage.set(type, list);
+  },
+  clearItems: function() {
+    this.storage.set('saved', []);
+    this.storage.set('spent', []);
+    return true;
+  },
+  
+  // Theme methods
+  getTheme: function() {
+    return this.storage.get('theme') || 'light';
+  },
+  setTheme: function(theme) {
+    return this.storage.set('theme', theme);
   }
-}
+};
 
-/* ================== RESULTS ================== */
-const savedList=$("#savedList"), spentList=$("#spentList");
-const totalSaved=$("#totalSaved"), totalSpent=$("#totalSpent"), net=$("#net");
-const clearAll=$("#clearAll");
+// ================== UTILITIES ==================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => [...document.querySelectorAll(sel)];
+const fmtFt = (v) => new Intl.NumberFormat("hu-HU", {
+  style: "currency",
+  currency: "HUF",
+  maximumFractionDigits: 0
+}).format(Number(v || 0));
+const esc = (s) => (s || "").replace(/[&<>"']/g, m => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  "\"": "&quot;",
+  "'": "&#39;"
+}[m]));
 
-function renderResults(){
-  const saved=Data.get("saved")||[], spent=Data.get("spent")||[];
-  if(savedList) savedList.innerHTML="";
-  if(spentList) spentList.innerHTML="";
-  let s=0,e=0;
-  saved.forEach((it,idx)=>{
-    s+=Number(it.price);
-    const li=document.createElement("li"); li.className="item";
-    li.innerHTML=`<span><span class="badge b-green">spórolt</span> <span class="name">${esc(it.name)}</span></span>
-                  <span class="price">${fmtFt(it.price)}</span>`;
-    if(savedList) savedList.appendChild(li);
-  });
-  spent.forEach((it,idx)=>{
-    e+=Number(it.price);
-    const li=document.createElement("li"); li.className="item";
-    li.innerHTML=`<span><span class="badge b-red">vett</span> <span class="name">${esc(it.name)}</span></span
+// ================== APP STATE ==================
+const App = {
+  currentView: 'profile',
+  
+  init: function() {
+    this.bindWelcomeScreen();
+    this.bindTheme();
+    this.bindTabs();
+    this.bindProfile();
+    this.bindCalculator();
+    this.bindResults();
+  },
+  
+  // Welcome Screen
+  bindWelcomeScreen: function() {
+    const btn = $('#enterAppBtn');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        $('#welcomeScreen').classList.add('hidden');
+        $('#mainApp').classList.remove('hidden');
+        const profile = DataAPI.getProfile();
+        this.setView(profile ? 'calc' : 'profile');
+      });
+    }
+  },
+  
+  // Theme
+  bindTheme: function() {
+    const toggle = $('#themeToggle');
+    const label = $('#modeLabel');
+    
+    const applyTheme = (theme) => {
+      document.documentElement.setAttribute('data-theme', theme);
+      if (toggle) toggle.checked = theme === 'dark';
+      if (label) label.textContent = theme === 'dark' ? 'Sötét' : 'Világos';
+      DataAPI.setTheme(theme);
+    };
+    
+    applyTheme(DataAPI.getTheme());
+    
+    if (toggle) {
+      toggle.addEventListener('change', () => {
+        applyTheme(toggle.checked ? 'dark' : 'light');
+      });
+    }
+  },
+  
+  // Tabs/Views
+  bindTabs: function() {
+    const tabs = $$('.tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        this.setView(tab.dataset.view);
+      });
+    });
+    
+    $$('[data-view="calc"]').forEach(btn => {
+      btn.addEventListener('click', () => this.setView('calc'));
+    });
+  },
+  
+  setView: function(name) {
+    this.currentView = name;
+    const tabs = $$('.tab');
+    const views = {
+      profile: $('#view-profile'),
+      calc: $('#view-calc'),
+      results: $('#view-results'),
+      stats: $('#view-stats')
+    };
+    
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.view === name));
+    Object.entries(views).forEach(([k, el]) => {
+      if (el) el.classList.toggle('hidden', k !== name);
+    });
+    
+    if (name === 'calc') this.syncCalcHello();
+    if (name === 'results') this.renderResults();
+    if (name === 'stats') this.drawStats();
+    
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  },
+  
+  // Profile
+  bindProfile: function() {
+    const nameEl = $('#name');
+    const ageEl = $('#age');
+    const salaryEl = $('#salary');
+    const hoursEl = $('#hours');
+    const saveBtn = $('#saveProfile');
+    const delBtn = $('#deleteProfile');
+    
+    const loadProfile = () => {
+      const p = DataAPI.getProfile();
+      if (!p) return;
+      nameEl.value = p.name || '';
+      ageEl.value = p.age || '';
+      salaryEl.value = p.salary || '';
+      hoursEl.value = p.hours || '';
+    };
+    
+    const saveProfile = () => {
+      const p = {
+        name: nameEl.value.trim(),
+        age: Number(ageEl.value),
+        salary: Number(salaryEl.value),
+        hours: Number(hoursEl.value)
+      };
+      
+      if (!p.name || !p.age || !p.salary || !p.hours) {
+        alert('Tölts ki minden mezőt!');
+        return;
+      }
+      
+      DataAPI.saveProfile(p);
+      this.setView('calc');
+    };
+    
+    const deleteProfile = () => {
+      if (!confirm('Biztos törlöd a profilodat és a listákat?')) return;
+      DataAPI.deleteProfile();
+      nameEl.value = ageEl.value = salaryEl.value = hoursEl.value = '';
+      this.setView('profile');
+    };
+    
+    loadProfile();
+    if (saveBtn) saveBtn.addEventListener('click', saveProfile);
+    if (delBtn) delBtn.addEventListener('click', deleteProfile);
+  },
+  
+  // Calculator
+  bindCalculator: function() {
+    const productName = $('#productName');
+    const productPrice = $('#productPrice');
+    const calcBtn = $('#calculateBtn');
+    const calcResult = $('#calcResult');
+    const saveBtn = $('#saveBtn');
+    const buyBtn = $('#buyBtn');
+    
+    const calculate = () => {
+      const p = DataAPI.getProfile();
+      if (!p) {
+        this.setView('profile');
+        return;
+      }
+      
+      const name = productName.value.trim();
+      const price = Number(productPrice.value);
+      
+      if (!name || !price || price <= 0) {
+        alert('Add meg a termék nevét és árát!');
+        return;
+      }
+      
+      const hourly = p.salary / (p.hours * 4);
+      if (!hourly || hourly <= 0) {
+        alert('Érvénytelen profil adatok.');
+        return;
+      }
+      
+      const hours = price / hourly;
+      
+      $('#hourlyHint').textContent = `Jelenlegi órabéred ~ ${fmtFt(hourly)}/óra`;
+      $('#workHoursText').textContent = `Kb. ${hours.toFixed(1)} munkaórádba kerülne (${fmtFt(price)}).`;
+      
+      calcResult.dataset.name = name;
+      calcResult.dataset.price = String(price);
+      calcResult.dataset.hours = String(hours);
+      calcResult.classList.remove('hidden');
+    };
+    
+    const commit = (type) => {
+      const name = calcResult.dataset.name;
+      const price = Number(calcResult.dataset.price);
+      const hours = Number(calcResult.dataset.hours);
+      
+      if (!name || !price) {
+        alert('Előbb számolj!');
+        return;
+      }
+      
+      DataAPI.addItem(type, {name, price, hours});
+      
+      if (type === 'spent' && hours > 10) {
+        this.showCoach();
+      } else {
+        this.setView('results');
+      }
+    };
+    
+    if (calcBtn) calcBtn.addEventListener('click', calculate);
+    if (saveBtn) saveBtn.addEventListener('click', () => commit('saved'));
+    if (buyBtn) buyBtn.addEventListener('click', () => commit('spent'));
+  },
+  
+  syncCalcHello: function() {
+    const hello = $('#hello');
+    const p = DataAPI.getProfile();
+    
+    if (!p) {
+      if (hello) hello.textContent = 'Szia! Töltsd ki a profilod a pontos számításhoz.';
+      return;
+    }
+    
+    if (hello) hello.innerHTML = `Szia <b>${esc(p.name || '')}</b>! Nézzük meg, hány órádba kerülne.`;
+  },
+  
+  // Coach
+  showCoach: function() {
+    const MESSAGES = [
+      "Ejnye, ezért most sokat fogsz dolgozni. 😬","A pénztárcád halk sírást hallatott. 💸","A jövőbeli éned most csóválja a fejét.",
+      "Ha boldoggá tesz, oké – de sok órádba kerül.","Ez már a 'drága, de kell' kategória? 🤨","A bankszámlád szabadságra ment.",
+      "10 órán túl? Anyád felhívna. 🫨","Legközelebb írd be: 'gondolkozzak még'.","A racionalitás most ebédel. 🍽️",
+      "Legalább szép lesz. Reméljük.","Ez egy hosszú műszak ára. ⏳","Instant dopamin, tartós mínusz. ⚡️"
+    ];
+    
+    const bubble = $('#coach');
+    if (bubble) {
+      bubble.textContent = 'Apádhelyett Anyád: ' + MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+      bubble.classList.remove('hidden');
+      setTimeout(() => {
+        bubble.classList.add('hidden');
+        this.setView('results');
+      }, 2400);
+    }
+  },
+  
+  // Results
+  bindResults: function() {
+    const clearBtn = $('#clearAll');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        if (!confirm('Biztos üríted a listát?')) return;
+        DataAPI.clearItems();
+        this.renderResults();
+        this.drawStats();
+      });
+    }
+  },
+  
+  renderResults: function() {
+    const saved = DataAPI.getSaved();
+    const spent = DataAPI.getSpent();
+    const savedList = $('#savedList');
+    const spentList = $('#spentList');
+    
+    if (savedList) savedList.innerHTML = '';
+    if (spentList) spentList.innerHTML = '';
+    
+    let totalSavedAmt = 0;
+    let totalSpentAmt = 0;
+    
+    saved.forEach(it => {
+      totalSavedAmt += Number(it.price);
+      const li = document.createElement('li');
+      li.className = 'item';
+      li.innerHTML = `<span><span class="badge b-green">spórolt</span> <span class="name">${esc(it.name)}</span></span><span class="price">${fmtFt(it.price)}</span>`;
+      if (savedList) savedList.appendChild(li);
+    });
+    
+    spent.forEach(it => {
+      totalSpentAmt += Number(it.price);
+      const li = document.createElement('li');
+      li.className = 'item';
+      li.innerHTML = `<span><span class="badge b-red">vett</span> <span class="name">${esc(it.name)}</span></span><span class="price">${fmtFt(it.price)}</span>`;
+      if (spentList) spentList.appendChild(li);
+    });
+    
+    const totalSaved = $('#totalSaved');
+    const totalSpent = $('#totalSpent');
+    const net = $('#net');
+    
+    if (totalSaved) totalSaved.textContent = fmtFt(totalSavedAmt);
+    if (totalSpent) totalSpent.textContent = fmtFt(totalSpentAmt);
+    if (net) net.textContent = fmtFt(totalSavedAmt - totalSpentAmt);
+  },
+  
+  // Stats
+  drawStats: function() {
+    const cvs = $('#statsCanvas');
+    if (!cvs) return;
+    
+    const ctx = cvs.getContext('2d');
+    const monthKey = (ts) => {
+      const d = new Date(ts);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    };
+    
+    const map = new Map();
+    DataAPI.getSaved().forEach(it => {
+      const k = monthKey(it.at || Date.now());
+      const o = map.get(k) || {saved: 0, spent: 0};
+      o.saved += Number(it.price) || 0;
+      map.set(k, o);
+    });
+    DataAPI.getSpent().forEach(it => {
+      const k = monthKey(it.at || Date.now());
+      const o = map.get(k) || {saved: 0, spent: 0};
+      o.spent += Number(it.price) || 0;
+      map.set(k, o);
+    });
+    
+    const arr = [...map.entries()].sort((a, b) => a[0] > b[0] ? 1 : -1).slice(-8);
+    const labels = arr.map(x => x[0]);
+    const savedData = arr.map(x => x[1].saved);
+    const spentData = arr.map(x => x[1].spent);
+    
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    
+    const P = {l: 48, r: 20, t: 14, b: 40};
+    const W = cvs.width - P.l - P.r;
+    const H = cvs.height - P.t - P.b;
+    
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line');
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(P.l, P.t);
+    ctx.lineTo(P.l, P.t + H);
+    ctx.lineTo(P.l + W, P.t + H);
+    ctx.stroke();
+    
+    const maxVal = Math.max(1000, ...savedData, ...spentData);
+    const y = (v) => P.t + H - (v / maxVal) * H;
+    const barW = W / Math.max(1, labels.length) / 2.2;
+    
+    for (let i = 0; i < labels.length; i++) {
+      const x0 = P.l + i * (W / labels.length) + 8;
+      
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--green');
+      ctx.fillRect(x0, y(savedData[i]), barW, (P.t + H) - y(savedData[i]));
+      
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--red');
+      ctx.fillRect(x0 + barW + 6, y(spentData[i]), barW, (P.t + H) - y(spentData[i]));
+      
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted');
+      ctx.font = '12px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(labels[i], x0 + barW / 2 + 3, P.t + H + 16);
+    }
+  }
+};
+
+// ================== INITIALIZE APP ==================
+App.init();
+</script>
+</body>
+</html>
