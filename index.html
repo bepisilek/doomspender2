@@ -32,6 +32,61 @@ body {
   padding:16px 14px 100px;
 }
 
+/* ============== WELCOME SCREEN ============== */
+#welcomeScreen {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  text-align:center;
+  padding:20px;
+}
+.welcome-logo {
+  font-size:72px;
+  margin-bottom:16px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.welcome-title {
+  font-size:42px;
+  font-weight:900;
+  margin:0 0 12px;
+  background: linear-gradient(135deg, var(--blue), #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.welcome-subtitle {
+  font-size:16px;
+  color:var(--muted);
+  margin:0 0 32px;
+  line-height:1.6;
+  max-width:320px;
+}
+.welcome-btn {
+  background:var(--blue);
+  color:#fff;
+  border:none;
+  border-radius:16px;
+  padding:16px 48px;
+  font-size:18px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 12px 32px rgba(11,102,255,.35);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.welcome-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:0 16px 40px rgba(11,102,255,.45);
+}
+.welcome-btn:active {
+  transform: translateY(0);
+}
+
 /* ============== HEADER ============== */
 header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
 h1 { font-size:26px; font-weight:800; margin:0; }
@@ -151,10 +206,30 @@ footer {
   color:var(--muted);
   margin-top:8px;
 }
+
+.hidden { display:none !important; }
+.hint { font-size:12px; color:var(--muted); margin:8px 0 0; }
+.center { text-align:center; }
+.grid > div { margin-bottom:10px; }
+.sum { display:flex; flex-direction:column; gap:8px; }
+.sum > div { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); }
+.stat-legend { display:flex; align-items:center; margin-bottom:12px; }
+.dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; }
+.dot.green { background:var(--green); }
+.dot.red { background:var(--red); }
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <!-- WELCOME SCREEN -->
+  <div id="welcomeScreen">
+    <div class="welcome-logo">⏰</div>
+    <h1 class="welcome-title">Munkaóra</h1>
+    <p class="welcome-subtitle">Tudd meg, hány munkaórádba kerülnek a dolgok, és hozz okosabb döntéseket!</p>
+    <button class="welcome-btn" onclick="enterApp()">Kezdjük! 🚀</button>
+  </div>
+
+  <!-- MAIN APP -->
+  <div class="wrap hidden" id="mainApp">
     <header>
       <div>
         <h1>Munkaóra</h1>
@@ -264,6 +339,12 @@ footer {
   </div>
 
 <script>
+/* ================== WELCOME SCREEN ================== */
+function enterApp() {
+  document.getElementById("welcomeScreen").classList.add("hidden");
+  document.getElementById("mainApp").classList.remove("hidden");
+}
+
 /* ================== UTIL + DATA ================== */
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
@@ -434,63 +515,4 @@ function renderResults(){
   });
   totalSaved.textContent=fmtFt(s);
   totalSpent.textContent=fmtFt(e);
-  net.textContent=fmtFt(s-e);
-}
-clearAll.addEventListener("click", ()=>{
-  if(!confirm("Biztos üríted a listát?")) return;
-  Data.set("saved", []); Data.set("spent", []); renderResults(); drawStats();
-});
-
-/* ================== STATS (canvas, monthly) ================== */
-const cvs = $("#statsCanvas");
-const ctx = cvs.getContext("2d");
-
-function monthKey(ts){
-  const d=new Date(ts); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-}
-function aggregateMonthly(){
-  const map = new Map();
-  (Data.get("saved")||[]).forEach(it=>{
-    const k=monthKey(it.at||Date.now()); const o=map.get(k)||{saved:0, spent:0}; o.saved+=Number(it.price)||0; map.set(k,o);
-  });
-  (Data.get("spent")||[]).forEach(it=>{
-    const k=monthKey(it.at||Date.now()); const o=map.get(k)||{saved:0, spent:0}; o.spent+=Number(it.price)||0; map.set(k,o);
-  });
-  const arr = [...map.entries()].sort((a,b)=> a[0]>b[0]?1:-1).slice(-8); // last 8 months
-  return { labels: arr.map(x=>x[0]), saved: arr.map(x=>x[1].saved), spent: arr.map(x=>x[1].spent) };
-}
-function drawStats(){
-  const d = aggregateMonthly();
-  // clear
-  ctx.clearRect(0,0,cvs.width,cvs.height);
-  // axes
-  const P={l:48, r:20, t:14, b:40}; const W=cvs.width-P.l-P.r; const H=cvs.height-P.t-P.b;
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--line");
-  ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(P.l,P.t); ctx.lineTo(P.l,P.t+H); ctx.lineTo(P.l+W,P.t+H); ctx.stroke();
-  // scale
-  const maxVal = Math.max(1000, ...d.saved, ...d.spent);
-  const y = v => P.t + H - (v/maxVal)*H;
-  const barW = W / Math.max(1, d.labels.length) / 2.2;
-  // bars
-  for(let i=0;i<d.labels.length;i++){
-    const x0 = P.l + i*(W/d.labels.length) + 8;
-    // saved (green)
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--green");
-    ctx.fillRect(x0, y(d.saved[i]), barW, (P.t+H)-y(d.saved[i]));
-    // spent (red)
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--red");
-    ctx.fillRect(x0+barW+6, y(d.spent[i]), barW, (P.t+H)-y(d.spent[i]));
-    // labels
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--muted");
-    ctx.font="12px system-ui"; ctx.textAlign="center";
-    ctx.fillText(d.labels[i], x0+barW/2+3, P.t+H+16);
-  }
-}
-
-/* ================== INIT ================== */
-loadProfile();
-setView(Data.get("profile") ? "calc" : "profile");
-syncHello();
-</script>
-</body>
-</html>
+  net.textContent
