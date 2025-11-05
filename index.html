@@ -768,7 +768,7 @@ const App={
       this.state.lastAction={type,entry:{name,price,hours,at:now()}};
       UI.showActionMessage(type==="saved"?"positive":"negative");
       $("#productName").value=""; $("#productPrice").value=""; r.classList.add("hidden");
-      this.setView("results");
+      this.setView("results",{coachDelay:3200});
     };
     $("#saveBtn").addEventListener("click",()=>commit("saved"));
     $("#buyBtn").addEventListener("click",()=>commit("spent"));
