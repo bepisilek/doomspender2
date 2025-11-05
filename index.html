@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hu" data-theme="light">
+<html lang="hu">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -511,7 +511,7 @@ const API={
   },
   goals:()=>Data.get("goals")||{monthlyCap:0,savingGoal:0},
   saveGoals:(g)=>Data.set("goals",g),
-  exportAll:()=>({__schema:schemaVersion,profile:API.profile(),saved:API.list("saved"),spent:API.list("spent"),goals:API.goals(),theme:API.theme()}),
+  exportAll:()=>({__schema:schemaVersion,profile:API.profile(),saved:API.list("saved"),spent:API.list("spent"),goals:API.goals()}),
   importAll:(obj)=>{
     if(!obj||typeof obj!=="object") throw new Error("Érvénytelen JSON");
     if(obj.__schema && obj.__schema>schemaVersion) throw new Error("Újabb sémájú adat – frissítsd az appot!");
@@ -665,7 +665,6 @@ const App={
     Data.migrate();
     this.bindWelcome();
     this.bindProfileSetup();
-    this.bindTheme();
     this.bindTabs();
     this.bindCalculator();
     this.bindResults();
