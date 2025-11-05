@@ -18,11 +18,11 @@
   --pill:#eaf0ff; --overlay:rgba(0,0,0,.5);
 }
 html[data-theme="dark"]{
-  --bg-grad-1:#040a1c; --bg-grad-2:#0d1630;
-  --card:#172149; --text:#f7f9ff; --muted:#c3cdf5; --line:#2b3762;
-  --blue:#3b82f6; --blue-2:#60a5fa; --green:#22c55e; --red:#ef4444; --yellow:#facc15; --violet:#a884ff; --orange:#ffb26b;
-  --radius:20px; --shadow:0 32px 72px rgba(0,0,0,.78);
-  --pill:rgba(25,34,70,.9); --overlay:rgba(5,11,28,.88);
+  --bg-grad-1:#040711; --bg-grad-2:#0b1024;
+  --card:#101b38; --text:#f4f6ff; --muted:#b5c0eb; --line:#1e2a4a;
+  --blue:#4f8cff; --blue-2:#6ea2ff; --green:#2fdd82; --red:#ff5f7a; --yellow:#facc15; --violet:#8f8dff; --orange:#ffb16d;
+  --shadow:0 18px 46px rgba(0,0,0,.55);
+  --pill:#162a58; --overlay:rgba(3,6,15,.72);
 }
 
 /* =======================================================================
@@ -37,7 +37,6 @@ body{
   display:flex; justify-content:center; align-items:stretch;
   position:relative; overflow-x:hidden;
 }
-html[data-theme="dark"] body{background:linear-gradient(180deg,var(--bg-grad-1),var(--bg-grad-2))}
 body::before,
 body::after{
   content:""; position:fixed; width:420px; height:420px; border-radius:50%;
@@ -47,7 +46,6 @@ body::after{
 }
 body::before{top:-220px; right:-160px;}
 body::after{bottom:-260px; left:-200px; background:radial-gradient(circle at center,var(--violet)30%,transparent 72%);}
-html[data-theme="dark"] body::before,html[data-theme="dark"] body::after{opacity:.42;filter:blur(150px)}
 
 /* Layout wrapper */
 .container{width:100%;max-width:520px;padding:18px 14px 110px;position:relative;isolation:isolate;background:rgba(255,255,255,.28);backdrop-filter:blur(22px)}
@@ -57,8 +55,6 @@ html[data-theme="dark"] body::before,html[data-theme="dark"] body::after{opacity
   box-shadow:0 18px 44px rgba(15,36,84,.18);
   filter:blur(0); z-index:-1; opacity:.9;
 }
-html[data-theme="dark"] .container{background:linear-gradient(150deg,rgba(23,33,74,.95),rgba(12,20,46,.93));box-shadow:0 46px 96px rgba(0,0,0,.78);border:1px solid rgba(96,128,210,.52)}
-html[data-theme="dark"] .container::before{background:linear-gradient(155deg,rgba(110,142,230,.34),rgba(54,72,128,.46));border:1px solid rgba(138,170,238,.44);box-shadow:0 38px 78px rgba(3,8,26,.84)}
 
 /* Utils */
 .hidden{display:none !important}
@@ -104,26 +100,14 @@ html[data-theme="dark"] .container::before{background:linear-gradient(155deg,rgb
 .brand{display:flex;flex-direction:column}
 .brand h1{font-size:26px;font-weight:900;letter-spacing:-.01em;margin:0}
 .brand small{color:var(--muted);font-size:12px}
-.header-right{display:flex;align-items:center;gap:12px}
+.header-right{display:flex;align-items:center;gap:10px}
 .profile-icon{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(11,102,255,.28);transition:transform .18s}
 .profile-icon:hover{transform:translateY(-2px)}
-.theme-switch{display:flex;align-items:center;gap:10px;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,rgba(234,240,255,.86),rgba(255,255,255,.76));box-shadow:0 12px 28px rgba(15,36,84,.14);backdrop-filter:blur(12px);border:1px solid rgba(182,198,250,.45)}
-.theme-switch .theme-label{font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;color:var(--muted);user-select:none;cursor:pointer;transition:color .22s ease,transform .22s ease}
-.theme-switch .theme-label[aria-pressed="true"]{color:var(--blue);transform:translateY(-1px)}
-.theme-switch .theme-label:focus-visible{outline:2px solid color-mix(in srgb,var(--blue) 70%,#fff 30%);outline-offset:3px;border-radius:999px}
-.theme-switch .toggle{appearance:none;width:46px;height:24px;border-radius:999px;background:#cfd8ff55;border:1px solid rgba(160,176,232,.55);position:relative;cursor:pointer;transition:background .3s ease,border-color .3s ease,box-shadow .3s ease}
-.theme-switch .toggle::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:left .3s ease,box-shadow .3s ease,background .3s ease}
-.theme-switch .toggle:checked{background:linear-gradient(135deg,var(--blue),var(--blue-2));border-color:rgba(11,102,255,.55);box-shadow:0 8px 18px rgba(11,102,255,.32)}
-.theme-switch .toggle:checked::after{left:24px;box-shadow:0 6px 14px rgba(11,102,255,.35)}
-.theme-switch .toggle:focus-visible{box-shadow:0 0 0 3px rgba(11,102,255,.28)}
-html[data-theme="dark"] .theme-switch{background:linear-gradient(135deg,rgba(32,44,90,.9),rgba(44,60,118,.86));box-shadow:0 30px 60px rgba(0,0,0,.66);border:1px solid rgba(104,138,216,.6)}
-html[data-theme="dark"] .theme-switch .theme-label{color:color-mix(in srgb,var(--muted) 60%,#fff 40%)}
-html[data-theme="dark"] .theme-switch .theme-label[aria-pressed="true"]{color:var(--blue)}
-html[data-theme="dark"] .theme-switch .toggle{background:linear-gradient(135deg,rgba(54,70,130,.88),rgba(64,84,146,.82));border-color:rgba(116,146,224,.74)}
-html[data-theme="dark"] .theme-switch .toggle::after{background:linear-gradient(135deg,#fdfdff,#e6ecff);box-shadow:0 8px 18px rgba(0,0,0,.5)}
-html[data-theme="dark"] .theme-switch .toggle:checked{box-shadow:0 14px 28px rgba(52,114,255,.52);border-color:rgba(122,162,255,.9)}
-html[data-theme="dark"] .theme-switch .toggle:checked::after{box-shadow:0 14px 26px rgba(38,90,210,.58)}
-html[data-theme="dark"] .theme-switch .toggle:focus-visible{box-shadow:0 0 0 3px rgba(68,136,255,.55)}
+.switch{display:flex;align-items:center;gap:6px}
+.toggle{appearance:none;width:48px;height:26px;background:linear-gradient(135deg,#d4dcff77,#c7d2fe55);border-radius:999px;position:relative;cursor:pointer;outline:none;border:1px solid rgba(255,255,255,.35);transition:background .2s}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#ffffff,#f8fafc);box-shadow:0 6px 14px rgba(15,23,42,.18);transition:left .18s ease,box-shadow .2s ease}
+.toggle:checked{background:linear-gradient(135deg,var(--blue),var(--violet))}
+.toggle:checked::after{left:25px;box-shadow:0 6px 18px rgba(11,102,255,.4)}
 
 /* Tabs WITHOUT profile */
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 12px}
@@ -144,12 +128,7 @@ h2{margin:0 0 10px;text-align:center;color:var(--blue);font-size:18px}
 label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
 input,select,textarea{width:100%;padding:12px 14px;border:1px solid color-mix(in srgb,var(--line) 80%,transparent);border-radius:14px;font-size:15px;background:rgba(255,255,255,.6);color:var(--text);transition:border .2s ease,box-shadow .2s ease,background .2s ease}
 input:focus,select:focus,textarea:focus{border-color:color-mix(in srgb,var(--blue) 80%,#fff 20%);outline:none;box-shadow:0 0 0 3px rgba(11,102,255,.15);background:#fff}
-html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:rgba(18,26,54,.92);border:1px solid rgba(122,150,236,.78);color:var(--text);box-shadow:0 24px 52px rgba(0,0,0,.68)}
-html[data-theme="dark"] input::placeholder,html[data-theme="dark"] select::placeholder,html[data-theme="dark"] textarea::placeholder{color:color-mix(in srgb,var(--muted) 55%,#fff 45%)}
-html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus,html[data-theme="dark"] textarea:focus{background:rgba(24,34,70,.98);box-shadow:0 0 0 3px rgba(91,148,255,.62);border-color:rgba(156,194,255,.88)}
 .row{display:flex;gap:8px;margin-top:10px}
-.calc-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
-.calc-actions .btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:58px;padding:14px 0;touch-action:manipulation}
 .btn{flex:1;border:none;border-radius:14px;padding:13px 0;font-size:15px;font-weight:900;color:#fff;cursor:pointer;transition:opacity .12s,transform .12s,box-shadow .2s,filter .2s}
 .btn:hover{opacity:.95}
 .btn:active{transform:translateY(1px);filter:brightness(.95)}
@@ -159,20 +138,6 @@ html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus,html[da
 .red{background:linear-gradient(135deg,#f87171,var(--red))}
 .yellow{background:linear-gradient(135deg,#fde047,var(--yellow));color:#111}
 .gray{background:linear-gradient(135deg,#f3f4f6,#e5e7eb);color:#111}
-html[data-theme="dark"] .btn{box-shadow:0 22px 52px rgba(0,0,0,.66)}
-html[data-theme="dark"] .btn:hover{filter:brightness(1.07);box-shadow:0 28px 64px rgba(4,10,32,.7)}
-html[data-theme="dark"] .blue{background:linear-gradient(135deg,#2563eb,#3b82f6)}
-html[data-theme="dark"] .green{background:linear-gradient(135deg,#199652,#22c55e)}
-html[data-theme="dark"] .red{background:linear-gradient(135deg,#f66f6f,#ef4444)}
-html[data-theme="dark"] .yellow{background:linear-gradient(135deg,#facc15,#fde047);color:#141100}
-html[data-theme="dark"] .gray{background:linear-gradient(135deg,#202b4a,#323e68);color:var(--text)}
-html[data-theme="dark"] .card{background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:var(--shadow);border:1px solid rgba(112,144,214,.46)}
-html[data-theme="dark"] .card::before{border:1px solid rgba(142,170,232,.3);background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,0))}
-html[data-theme="dark"] .tab{background:linear-gradient(135deg,rgba(36,48,92,.88),rgba(24,34,70,.88));color:color-mix(in srgb,var(--muted) 55%,#fff 45%);box-shadow:0 24px 54px rgba(0,0,0,.6);border:1px solid rgba(92,120,200,.42)}
-html[data-theme="dark"] .tab.active{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fefeff;box-shadow:0 30px 64px rgba(59,130,246,.48);border-color:rgba(132,172,255,.68)}
-html[data-theme="dark"] .result{background:linear-gradient(135deg,rgba(60,128,246,.38),rgba(151,109,255,.32));color:#fdfdff;border-color:rgba(154,186,255,.56);box-shadow:0 26px 56px rgba(4,10,28,.68)}
-html[data-theme="dark"] footer{color:color-mix(in srgb,var(--muted) 48%,#fff 52%)}
-html[data-theme="dark"] .funny-threat{background:linear-gradient(135deg,rgba(40,56,112,.9),rgba(28,40,84,.86));border-color:rgba(126,154,226,.5);box-shadow:0 26px 60px rgba(0,0,0,.58);color:color-mix(in srgb,var(--muted) 52%,#fff 48%)}
 
 /* Calculator result + coach bubble */
 .result{background:linear-gradient(135deg,rgba(76,106,255,.12),rgba(143,109,255,.14));border:1px solid rgba(108,130,255,.3);color:#0b2a66;border-radius:14px;padding:12px 14px;font-weight:800;text-align:center;box-shadow:0 10px 24px rgba(15,36,84,.1)}
@@ -189,7 +154,6 @@ html[data-theme="dark"] .funny-threat{background:linear-gradient(135deg,rgba(40,
   .tabs{gap:8px}
   .card{padding:16px 14px}
   .row{flex-direction:column}
-  .calc-actions{grid-template-columns:1fr}
   .controls{grid-template-columns:1fr;gap:10px}
   .bubble{right:10px;left:10px;max-width:none}
 }
@@ -227,34 +191,32 @@ html[data-theme="dark"] .funny-threat{background:linear-gradient(135deg,rgba(40,
 .icon-btn{border:none;background:#eef2ff;color:#0b2a66;border-radius:10px;padding:8px;cursor:pointer}
 .icon-btn.danger{background:#ffe5e5;color:#7d1b1b}
 .icon-btn.secondary{background:#eaf9ef;color:#124d2a}
-html[data-theme="dark"] .item{border-bottom:1px solid rgba(92,116,178,.6)}
-html[data-theme="dark"] .badge{background:linear-gradient(135deg,rgba(60,82,140,.58),rgba(50,70,126,.52));color:#f8faff}
-html[data-theme="dark"] .b-green{background:linear-gradient(135deg,rgba(42,164,114,.38),rgba(30,118,84,.34));color:#c6ffe6}
-html[data-theme="dark"] .b-red{background:linear-gradient(135deg,rgba(204,78,116,.38),rgba(150,46,80,.34));color:#ffe1e7}
-html[data-theme="dark"] .icon-btn{background:linear-gradient(135deg,rgba(44,60,112,.88),rgba(32,46,90,.86));color:#eaf1ff;box-shadow:0 16px 36px rgba(0,0,0,.56)}
-html[data-theme="dark"] .icon-btn.danger{background:linear-gradient(135deg,rgba(134,44,84,.82),rgba(110,34,70,.8));color:#ffd1dd}
-html[data-theme="dark"] .icon-btn.secondary{background:linear-gradient(135deg,rgba(44,112,88,.82),rgba(32,86,66,.78));color:#c8ffe9}
+html[data-theme="dark"] .item{border-bottom:1px solid rgba(64,86,132,.6)}
+html[data-theme="dark"] .badge{background:rgba(50,70,120,.45);color:var(--text)}
+html[data-theme="dark"] .b-green{background:rgba(32,138,92,.28);color:#a3f7d1}
+html[data-theme="dark"] .b-red{background:rgba(180,60,90,.3);color:#ffc5d0}
+html[data-theme="dark"] .icon-btn{background:rgba(32,46,86,.82);color:#dde6ff;box-shadow:0 10px 24px rgba(0,0,0,.45)}
+html[data-theme="dark"] .icon-btn.danger{background:rgba(96,32,60,.8);color:#ff97af}
+html[data-theme="dark"] .icon-btn.secondary{background:rgba(26,78,60,.78);color:#96f5c9}
 
 /* Undo snackbar */
 .snack{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#101828;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;z-index:1300}
 .snack button{background:#fff;color:#111;border:none;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer}
 .funny-threat{margin:18px auto 0;max-width:360px;padding:10px 16px;border-radius:14px;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid color-mix(in srgb,var(--line) 65%,transparent);box-shadow:0 12px 30px rgba(15,36,84,.08);font-size:12px;line-height:1.5;color:var(--muted);text-align:center;opacity:0;transform:translateY(6px);transition:opacity .28s ease,transform .28s ease;pointer-events:none}
 .funny-threat.show{opacity:1;transform:translateY(0)}
-html[data-theme="dark"] .snack{background:linear-gradient(135deg,rgba(20,30,62,.92),rgba(14,20,46,.9));box-shadow:0 28px 62px rgba(0,0,0,.62)}
-html[data-theme="dark"] .snack button{background:linear-gradient(135deg,rgba(112,168,255,.92),rgba(88,140,246,.88));color:#03102c}
 
 /* Stats */
 .stat-legend{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 10px}
 .dot{width:12px;height:12px;border-radius:50%}
 .dot.green{background:var(--green)} .dot.red{background:var(--red)}
 canvas{width:100%;height:auto;border-radius:12px;background:#ffffff08}
-html[data-theme="dark"] canvas{background:rgba(16,24,52,.88);border:1px solid rgba(108,134,204,.45);box-shadow:0 18px 40px rgba(0,0,0,.58)}
+html[data-theme="dark"] canvas{background:rgba(12,20,44,.86);border:1px solid rgba(82,106,168,.4);box-shadow:0 16px 36px rgba(0,0,0,.55)}
 
 /* Goals */
 .progress{height:12px;background:#e8ecff;border-radius:999px;overflow:hidden}
 .progress .bar{height:100%;background:linear-gradient(135deg,var(--green),#66e3a0);width:0%}
-html[data-theme="dark"] .progress{background:rgba(44,62,108,.7)}
-html[data-theme="dark"] .progress .bar{background:linear-gradient(135deg,#34f0a0,#64f5b8)}
+html[data-theme="dark"] .progress{background:rgba(34,52,96,.66)}
+html[data-theme="dark"] .progress .bar{background:linear-gradient(135deg,#29e88f,#59f2b0)}
 
 /* Modals */
 .modal{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:1500;padding:16px}
@@ -345,9 +307,9 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
     <div id="calcResult" class="hidden mt-12">
       <p class="result" id="workHoursText"></p>
       <p class="center small" id="hourlyHint"></p>
-      <div class="calc-actions">
-        <button class="btn green" id="saveBtn" type="button">Megspórolom 💚</button>
-        <button class="btn red" id="buyBtn" type="button">Megveszem 💸</button>
+      <div class="row calc-actions">
+        <button class="btn green" id="saveBtn">Megspórolom 💚</button>
+        <button class="btn red" id="buyBtn">Megveszem 💸</button>
       </div>
       <p class="small mt-6 center">A mentéshez válaszd ki, hogy spórolod vagy megveszed.</p>
     </div>
@@ -594,6 +556,41 @@ const COACH_CONTEXTS={
 /* =======================================================================
    SZIA LAJOS! ACTION MESSAGES
    ======================================================================= */
+const COACH=[
+"Ejnye, ezért most sokat fogsz dolgozni. 😬","A pénztárcád halk sírást hallatott. 💸","A jövőbeli éned most csóválja a fejét.",
+"Ha boldoggá tesz, oké – de sok órádba kerül.","Ez már a 'drága, de kell' kategória? 🤨","A bankszámlád szabadságra ment.",
+"10 órán túl? A jövőbeli Lajos felhívna. 🫨","Legközelebb írd be: 'gondolkozzak még'.","A racionalitás most ebédel. 🍽️","Legalább szép lesz. Reméljük.",
+"Ez egy hosszú műszak ára. ⏳","Instant dopamin, tartós mínusz. ⚡️","A lelkiismereted most offline.","Kávé helyett most dolgozol érte még párat.",
+"Nem muszáj, de megtetted. 😅","A matek nem tapsol most. 🧮","Ezen most a pénzügyi coach felszisszent.","Oké, de használd is naponta!",
+"A józan ész most AFK. 📴","Ha meghoznád újra ezt a döntést? Biztos?","Egy tétel, két sóhaj. 😮‍💨","Ez a 'szív döntött' vásárlás.",
+"Minimum egy hétvége ment rá.","Nem rossz, csak… drága.","Ha akciós volt, kicsit kevésbé fáj.","A 'majd visszateszem' gomb letiltva? 😏",
+"Ezt a döntést screenshotolom a tanmeséhez. 📸","Kis lépés a tárgy felé, nagy lépés a mínuszba.","Érzed azt a kis bökést? Az a bankkártya. 💳",
+"Na… legalább sztori lesz. 📖","A spórolás most szünetel. 🧘","Ha ezt megspóroltad volna…","Ez már 'luxus-szagú' döntés. 💎",
+"A jövő heti ebéded integet. 🍝","10+ óra? Ez már szerelem.","Tudod, hogy ezért túlórázol majd?","A költségvetésed most kér egy ölelést.",
+"Ez a vásárlás beszélgetést érdemel.","A mérleg: öröm + bűntudat = egyenleg?","Az ész helyett a szem döntött. 👀","Valaki most nagyon boldog (a kereskedő).",
+"Reméljük legalább tartós.","Ha ez motivál a munkára – rendben. 💪","Pénzügyi edzés: ma farizom + pénztárca.","Ezt a 'szükséges' szót feszegetjük.",
+"A spórolásod most levegőt vesz.","Kedves, de költséges.","A 'csak megnézem' után ez lett. 🛒","Én szóltam volna… ha kérdezel. 😉",
+"Egy tárgy, sok óra. Jó csere?","A fej számol, a szív vásárol.","Ha ezt bérben mérnénk, sok lenne.","Majd amikor jön a rezsi, emlékezz. 🧾",
+"Ez már 'felnőtt döntés' – ára van.","A bankod is látta ezt, ugye? 👀","Ha ez örömöt hoz, oké – de sokba került.","Instant jó érzés, késleltetett fájás.",
+"Nem baj, tanulópénz. Drága tanulópénz.","Pénzügyi sóhaj: *hosszan*. 😮‍💨","Ha ezt eladnád később… kérdéses.","Ez már 'jó, de muszáj volt?' kategória.",
+"Következőre írj listát. 📝","A határidők is integetnek most. ⏰","A spórolásod megbicsaklott.","A pénzed kicsit elszaladt kávézni. ☕",
+"Egy 'majd legközelebb' gomb hiányzott.","Ezt a döntést a jövőbeli te értékelni fogja? 🤔","Tarts egy 24 órás szabályt legközelebb.",
+"Most már legalább motivált vagy dolgozni. 😅","A költségvetésed kér egy meetinget. 📊","Ez kérem préselt munkaórákból készült. 🔧",
+"A hitelkártyád halkan remeg.","Ez az élmény reméljük nem múló.","Ha ezt egyszerűen 'kellett' – jó van.","Az ész: 'nem', a vágy: 'igen'.",
+"A pénzügyi határ most kicsit csúszott.","A 'spórolom' gomb is ott volt ám.","Kicsit több lett, mint 'apró'.","Legalább kipipálhatsz valamit a listán.",
+"Gondold át: 10+ óra = ez a tárgy.","A kompromisszumok drágák.","A minimalizmus most elfordult. 🧘‍♂️","Na jól van, de most spórolós hét jön!",
+"A pénzügyi én-ed most sír.","Ha ez hobbi: oké. Ha hóbort: kétszer gondold át.","A 'miért' erősebb volt, mint a 'mennyi'.",
+"Egy kis bűntudat, egy nagy doboz. 📦","Közelebb kerültél hozzá – a bankszámla távolabb.","Az ár-érték arány most vitatott.",
+"Ez a 'megérdemlem' pillanat?","Jutalomvásárlás? Akkor hajrá – ritkán.","A türelem gyakran olcsóbb. ⏳","A 'most azonnal kell' a legdrágább.",
+"Ha a munkád boldoggá tesz – megdolgoztál érte.","A jövőbeli számlák nem felejtenek.","A keret csipogott. 📉","A döntés megvan – most használd is, sokat!",
+"Minimum 10 óra – maximum öröm?","Ha ez inspirál: nyertél. Ha nem: tanultál.","Oké, de a következő legyen 'Megspórolom'.",
+"A bankod eddig bírta nevetés nélkül. 😬","Minden rendben – csak most kicsit drága lett.","A spórolásod most visszaszámol.",
+"Ezt még a józan eszed is megkérdezné: kellett?","Zárjuk le: használd egészséggel, okosan. ✅"
+];
+
+/* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
+   ======================================================================= */
 const positiveMessages=[
   "Szia Lajos, most épp egy lépéssel közelebb vagy a szabadsághoz.",
   "Okos döntés, Lajos – még pár ilyen, és lesz nyaralásod is.",
@@ -626,23 +623,7 @@ const negativeMessages=[
 const UI={
   snackTimer:null,
   coachTimer:null,
-  coachDelayTimer:null,
-  actionMessageTimer:null,
-  setTheme(theme){
-    const applied=API.setTheme(theme);
-    document.documentElement.setAttribute("data-theme",applied);
-    document.documentElement.dataset.theme=applied;
-    const toggle=$("#themeToggle");
-    if(toggle){
-      const checked=(applied==="dark");
-      toggle.checked=checked;
-      toggle.setAttribute("aria-checked",String(checked));
-    }
-    $$(".theme-label[data-theme]").forEach(label=>{
-      const isActive=label.dataset.theme===applied;
-      label.setAttribute("aria-pressed",String(isActive));
-    });
-  },
+  setTheme(theme){document.documentElement.setAttribute("data-theme",theme);$("#themeToggle").checked=(theme==="dark");API.setTheme(theme)},
   snack(msg,withUndo,undoFn){
     const s=$("#snack");
     if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
@@ -663,50 +644,16 @@ const UI={
       this.snackTimer=null;
     },3500);
   },
-  coach(context,opts={}){
-    const pool=COACH_CONTEXTS[context];
-    if(!pool||!pool.length) return;
-    const delay=Math.max(0,Number(opts.delay)||0);
-    const duration=Math.max(1200,Number(opts.duration)||2800);
-    const run=()=>{
-      const b=$("#coach");
-      if(!b) return;
-      if(this.coachTimer){clearTimeout(this.coachTimer); this.coachTimer=null;}
+  coach(text){
+    const b=$("#coach");
+    if(this.coachTimer){clearTimeout(this.coachTimer); this.coachTimer=null;}
+    b.textContent="Apádhelyett Anyád: "+text;
+    b.classList.add("show");
+    this.coachTimer=setTimeout(()=>{
       b.classList.remove("show");
-      void b.offsetWidth;
-      b.textContent=pool[Math.floor(Math.random()*pool.length)];
-      b.classList.add("show");
-      this.coachTimer=setTimeout(()=>{
-        b.classList.remove("show");
-        this.coachTimer=null;
-      },duration);
-    };
-    if(this.coachDelayTimer){clearTimeout(this.coachDelayTimer); this.coachDelayTimer=null;}
-    if(delay>0){
-      this.coachDelayTimer=setTimeout(()=>{run(); this.coachDelayTimer=null;},delay);
-    }else{
-      run();
-    }
+      this.coachTimer=null;
+    },2400);
   }
-};
-
-UI.showActionMessage=function(kind){
-  const el=$("#funnyThreat");
-  if(!el) return;
-  const pool=kind==="positive"?positiveMessages:kind==="negative"?negativeMessages:[];
-  if(!pool.length) return;
-  if(UI.actionMessageTimer){
-    clearTimeout(UI.actionMessageTimer);
-    UI.actionMessageTimer=null;
-  }
-  el.classList.remove("show");
-  void el.offsetWidth;
-  el.textContent=pool[Math.floor(Math.random()*pool.length)];
-  el.classList.add("show");
-  UI.actionMessageTimer=setTimeout(()=>{
-    el.classList.remove("show");
-    UI.actionMessageTimer=null;
-  },3000);
 };
 
 /* =======================================================================
@@ -727,13 +674,7 @@ const App={
     this.bindShortcuts();
     UI.setTheme(API.theme());
     const p=API.profile();
-    if(p){
-      $("#welcomeScreen").classList.add("hidden");
-      $("#appScreen").classList.remove("hidden");
-      this.updateProfileIcon();
-      this.syncCalcHello();
-      UI.coach("startup",{delay:500});
-    }
+    if(p){$("#welcomeScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");this.updateProfileIcon();this.syncCalcHello();}
     this.setView("calc");
     this.renderResults();
     this.updateGoalsUI();
@@ -771,31 +712,7 @@ const App={
 
   /* ---------- Theme ---------- */
   bindTheme(){
-    const toggle=$("#themeToggle");
-    if(!toggle) return;
-    const applyTheme=(theme)=>UI.setTheme(theme);
-    const syncFromToggle=()=>applyTheme(toggle.checked?"dark":"light");
-    toggle.addEventListener("change",syncFromToggle);
-    toggle.addEventListener("keydown",(event)=>{
-      if(event.key==="Enter"){
-        event.preventDefault();
-        toggle.checked=!toggle.checked;
-        syncFromToggle();
-      }
-    });
-    $$(".theme-label[data-theme]").forEach(label=>{
-      const handler=()=>{
-        const target=label.dataset.theme==="dark"?"dark":"light";
-        applyTheme(target);
-      };
-      label.addEventListener("click",handler);
-      label.addEventListener("keydown",(event)=>{
-        if(event.key==="Enter"||event.key===" "){
-          event.preventDefault();
-          handler();
-        }
-      });
-    });
+    const t=$("#themeToggle"); t.addEventListener("change",()=>UI.setTheme(t.checked?"dark":"light"));
   },
 
   /* ---------- Tabs (no profile tab) ---------- */
@@ -848,17 +765,17 @@ const App={
       const r=$("#calcResult"); const name=r.dataset.name; const price=Number(r.dataset.price); const hours=Number(r.dataset.hours);
       if(!name||!price){alert("Előbb számolj!");return false;}
       API.add(type,{name,price,hours});
-      const actionContext=type==="saved"?"save":"spend";
-      const timestamp=now();
-      this.state.lastAction={type,entry:{name,price,hours,at:timestamp},timestamp};
-      this.setView("results",{coachDelay:3600});
+      this.state.lastAction={type,entry:{name,price,hours,at:now()}};
       UI.showActionMessage(type==="saved"?"positive":"negative");
-      UI.coach(actionContext,{delay:220,duration:3000});
       $("#productName").value=""; $("#productPrice").value=""; r.classList.add("hidden");
-      return true;
+      this.setView("results",{coachDelay:3200});
     };
-    $("#saveBtn").addEventListener("click",()=>{commit("saved");});
-    $("#buyBtn").addEventListener("click",()=>{commit("spent");});
+    $("#saveBtn").addEventListener("click",()=>{
+      if(commit("saved")) this.setView("results",{coachDelay:3600});
+    });
+    $("#buyBtn").addEventListener("click",()=>{
+      if(commit("spent")) this.setView("results",{coachDelay:3600});
+    });
   },
   syncCalcHello(){
     const p=API.profile(); const h=$("#hello");
