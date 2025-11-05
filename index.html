@@ -191,6 +191,13 @@ input:focus,select:focus,textarea:focus{border-color:color-mix(in srgb,var(--blu
 .icon-btn{border:none;background:#eef2ff;color:#0b2a66;border-radius:10px;padding:8px;cursor:pointer}
 .icon-btn.danger{background:#ffe5e5;color:#7d1b1b}
 .icon-btn.secondary{background:#eaf9ef;color:#124d2a}
+html[data-theme="dark"] .item{border-bottom:1px solid rgba(64,86,132,.6)}
+html[data-theme="dark"] .badge{background:rgba(50,70,120,.45);color:var(--text)}
+html[data-theme="dark"] .b-green{background:rgba(32,138,92,.28);color:#a3f7d1}
+html[data-theme="dark"] .b-red{background:rgba(180,60,90,.3);color:#ffc5d0}
+html[data-theme="dark"] .icon-btn{background:rgba(32,46,86,.82);color:#dde6ff;box-shadow:0 10px 24px rgba(0,0,0,.45)}
+html[data-theme="dark"] .icon-btn.danger{background:rgba(96,32,60,.8);color:#ff97af}
+html[data-theme="dark"] .icon-btn.secondary{background:rgba(26,78,60,.78);color:#96f5c9}
 
 /* Undo snackbar */
 .snack{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#101828;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;z-index:1300}
@@ -203,10 +210,13 @@ input:focus,select:focus,textarea:focus{border-color:color-mix(in srgb,var(--blu
 .dot{width:12px;height:12px;border-radius:50%}
 .dot.green{background:var(--green)} .dot.red{background:var(--red)}
 canvas{width:100%;height:auto;border-radius:12px;background:#ffffff08}
+html[data-theme="dark"] canvas{background:rgba(12,20,44,.86);border:1px solid rgba(82,106,168,.4);box-shadow:0 16px 36px rgba(0,0,0,.55)}
 
 /* Goals */
 .progress{height:12px;background:#e8ecff;border-radius:999px;overflow:hidden}
 .progress .bar{height:100%;background:linear-gradient(135deg,var(--green),#66e3a0);width:0%}
+html[data-theme="dark"] .progress{background:rgba(34,52,96,.66)}
+html[data-theme="dark"] .progress .bar{background:linear-gradient(135deg,#29e88f,#59f2b0)}
 
 /* Modals */
 .modal{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:1500;padding:16px}
@@ -267,7 +277,11 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
       <small>Tudd, hány órát dolgozol a vágyaidért.</small>
     </div>
     <div class="header-right">
-      <div class="switch"><input id="themeToggle" class="toggle" type="checkbox" aria-label="Sötét mód kapcsoló" /></div>
+      <div class="theme-switch" role="group" aria-label="Téma váltása">
+        <span class="theme-label" data-theme="light" role="button" aria-pressed="false" tabindex="0">🌞 Világos</span>
+        <input id="themeToggle" class="toggle" type="checkbox" role="switch" aria-label="Sötét mód kapcsoló" aria-checked="false" />
+        <span class="theme-label" data-theme="dark" role="button" aria-pressed="false" tabindex="0">🌙 Sötét</span>
+      </div>
       <div class="profile-icon" id="profileIcon" title="Profil">👤</div>
     </div>
   </div>
@@ -511,7 +525,36 @@ const API={
 };
 
 /* =======================================================================
-   COACH MESSAGES (sok, hogy mindig változatos legyen)
+   COACH BUBBLE CONTEXTUAL MESSAGES
+   ======================================================================= */
+const COACH_CONTEXTS={
+  startup:[
+    "Szia Lajos! Nézzük, mennyi időt dolgoztál a vágyaidért. ⏳",
+    "Üdv újra, Lajos! Készen állsz egy kis pénzügyi matekra? 📈",
+    "Szia Lajos! Mutasd, mire gyűjtöttél mostanában. 💼"
+  ],
+  save:[
+    "Szépen spórolsz, Lajos! 💰",
+    "Ez igen, újabb munkaóra megmentve! 🙌",
+    "Szuper döntés, Lajos – így épül a tartalék. 🛡️",
+    "Most tényleg közelebb kerültél a célodhoz! 🏁"
+  ],
+  spend:[
+    "Hát ez most elment, de legalább hasznos volt. 😉",
+    "Megérte? Gondold át legközelebb! 💸",
+    "Egy kis öröm most, több munkaórád ment el. ⏱️",
+    "Oké, Lajos, de holnap spórolós nap jön! 😅"
+  ],
+  results:[
+    "Itt az eredmény, Lajos! 📊",
+    "Nézd meg, mennyit haladtál! 🚀",
+    "A számok nem hazudnak – ez a mérleged most. ⚖️",
+    "Ez a teljesítményed összefoglalva. 📘"
+  ]
+};
+
+/* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
    ======================================================================= */
 const COACH=[
 "Ejnye, ezért most sokat fogsz dolgozni. 😬","A pénztárcád halk sírást hallatott. 💸","A jövőbeli éned most csóválja a fejét.",
@@ -663,6 +706,7 @@ const App={
       $("#profileSetupScreen").classList.add("hidden");
       $("#appScreen").classList.remove("hidden");
       this.updateProfileIcon(); this.syncCalcHello();
+      UI.coach("startup",{delay:520});
     });
   },
 
@@ -676,14 +720,28 @@ const App={
     $$(".tab").forEach(tab=>tab.addEventListener("click",()=>this.setView(tab.dataset.view)));
     $$('[data-view="calc"]').forEach(b=>b.addEventListener("click",()=>this.setView("calc")));
   },
-  setView(v){
+  setView(v,opts={}){
+    const {coachDelay=null,suppressCoach=false}=opts||{};
     this.state.view=v;
     $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===v));
     $("#view-calc").classList.toggle("hidden",v!=="calc");
     $("#view-results").classList.toggle("hidden",v!=="results");
     $("#view-stats").classList.toggle("hidden",v!=="stats");
     $("#view-goals").classList.toggle("hidden",v!=="goals");
-    if(v==="results") this.renderResults();
+    if(v==="results"){
+      this.renderResults();
+      if(!suppressCoach){
+        let delay;
+        if(typeof coachDelay==="number"&&coachDelay>=0){
+          delay=coachDelay;
+        }else if(this.state.lastAction&&this.state.lastAction.timestamp&&(Date.now()-this.state.lastAction.timestamp)<2600){
+          delay=3200;
+        }else{
+          delay=220;
+        }
+        UI.coach("results",{delay});
+      }
+    }
     if(v==="stats") this.drawStats();
     if(v==="calc") this.syncCalcHello();
     const prefersReduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -700,7 +758,6 @@ const App={
       $("#workHoursText").textContent=`Kb. ${hours.toFixed(1)} munkaórádba kerülne (${fmtFt(price)}).`;
       $("#hourlyHint").textContent=`Jelenlegi órabéred ~ ${fmtFt(hourly)}/óra`;
       const r=$("#calcResult"); r.dataset.name=name; r.dataset.price=String(price); r.dataset.hours=String(hours); r.classList.remove("hidden");
-      UI.coach(COACH[Math.floor(Math.random()*COACH.length)]); // üzenet számoláskor
     };
     $("#calculateBtn").addEventListener("click",calc);
 
