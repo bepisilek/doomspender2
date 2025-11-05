@@ -1,16 +1,11 @@
-const CACHE_VERSION = 'munkaora-v5-20251105-3';
+const CACHE_VERSION = 'munkaora-v2-20240207';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './manifest.webmanifest?v=2025-11-05-3',
   './icons/icon-192.svg',
   './icons/icon-512.svg',
-  './icons/icon-512-maskable.svg',
-  './style.css',
-  './style.css?v=2025-11-05-3',
-  './app.js',
-  './app.js?v=2025-11-05-3'
+  './icons/icon-512-maskable.svg'
 ];
 
 self.addEventListener('install', (event) => {
