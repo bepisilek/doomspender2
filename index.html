@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Munkaóra — Apádhelyett Anyád 😏</title>
+<meta name="theme-color" content="#0b66ff" />
+<link rel="manifest" href="manifest.webmanifest" />
+<title>Munkaóra — Szia Lajos! 😏</title>
 <style>
 /* =======================================================================
    THEME TOKENS
@@ -16,10 +18,11 @@
   --pill:#eaf0ff; --overlay:rgba(0,0,0,.5);
 }
 html[data-theme="dark"]{
-  --bg-grad-1:#0b1020; --bg-grad-2:#0f1530;
-  --card:#11172e; --text:#e9ecff; --muted:#aab2d6; --line:#283255;
-  --shadow:0 16px 40px rgba(0,0,0,.45);
-  --pill:#16234d; --overlay:rgba(0,0,0,.6);
+  --bg-grad-1:#040a1c; --bg-grad-2:#0d1630;
+  --card:#172149; --text:#f7f9ff; --muted:#c3cdf5; --line:#2b3762;
+  --blue:#3b82f6; --blue-2:#60a5fa; --green:#22c55e; --red:#ef4444; --yellow:#facc15; --violet:#a884ff; --orange:#ffb26b;
+  --radius:20px; --shadow:0 32px 72px rgba(0,0,0,.78);
+  --pill:rgba(25,34,70,.9); --overlay:rgba(5,11,28,.88);
 }
 
 /* =======================================================================
@@ -32,23 +35,49 @@ body{
   color:var(--text);
   background:linear-gradient(180deg,var(--bg-grad-1),var(--bg-grad-2));
   display:flex; justify-content:center; align-items:stretch;
+  position:relative; overflow-x:hidden;
 }
+html[data-theme="dark"] body{background:linear-gradient(180deg,var(--bg-grad-1),var(--bg-grad-2))}
+body::before,
+body::after{
+  content:""; position:fixed; width:420px; height:420px; border-radius:50%;
+  background:radial-gradient(circle at center,var(--blue)33%,transparent 70%);
+  filter:blur(120px); opacity:.45; z-index:-1; pointer-events:none;
+  transition:transform .8s ease;
+}
+body::before{top:-220px; right:-160px;}
+body::after{bottom:-260px; left:-200px; background:radial-gradient(circle at center,var(--violet)30%,transparent 72%);}
+html[data-theme="dark"] body::before,html[data-theme="dark"] body::after{opacity:.42;filter:blur(150px)}
 
 /* Layout wrapper */
-.container{width:100%;max-width:520px;padding:18px 14px 110px}
+.container{width:100%;max-width:520px;padding:18px 14px 110px;position:relative;isolation:isolate;background:rgba(255,255,255,.28);backdrop-filter:blur(22px)}
+.container::before{
+  content:""; position:absolute; inset:0; border-radius:calc(var(--radius) + 16px);
+  background:linear-gradient(135deg,rgba(255,255,255,.65),rgba(234,240,255,.35));
+  box-shadow:0 18px 44px rgba(15,36,84,.18);
+  filter:blur(0); z-index:-1; opacity:.9;
+}
+html[data-theme="dark"] .container{background:linear-gradient(150deg,rgba(23,33,74,.95),rgba(12,20,46,.93));box-shadow:0 46px 96px rgba(0,0,0,.78);border:1px solid rgba(96,128,210,.52)}
+html[data-theme="dark"] .container::before{background:linear-gradient(155deg,rgba(110,142,230,.34),rgba(54,72,128,.46));border:1px solid rgba(138,170,238,.44);box-shadow:0 38px 78px rgba(3,8,26,.84)}
 
 /* Utils */
 .hidden{display:none !important}
 .center{text-align:center}
 .right{text-align:right}
 .bold{font-weight:900}
-.pill{display:inline-flex;align-items:center;gap:6px;background:var(--pill);color:var(--text);padding:2px 8px;border-radius:999px;font-weight:700;font-size:11px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--pill),rgba(255,255,255,.65));color:var(--text);padding:3px 10px;border-radius:999px;font-weight:700;font-size:11px;box-shadow:0 6px 14px rgba(15,23,42,.08);backdrop-filter:blur(8px)}
 .small{font-size:12px;color:var(--muted)}
 .mt-6{margin-top:6px}
 .mt-10{margin-top:10px}
 .mt-12{margin-top:12px}
 .mt-16{margin-top:16px}
 .mt-20{margin-top:20px}
+.a2hs-pill{position:fixed;left:50%;bottom:24px;transform:translate(-50%,6px);display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:linear-gradient(135deg,var(--pill),rgba(255,255,255,.75));color:var(--text);box-shadow:0 16px 32px rgba(11,36,84,.18);backdrop-filter:blur(12px);z-index:1400;font-size:13px;font-weight:700;transition:opacity .25s ease,transform .25s ease;opacity:0;pointer-events:none}
+.a2hs-pill.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.a2hs-pill button{border:none;background:rgba(255,255,255,.85);color:var(--text);font-weight:800;border-radius:999px;padding:6px 12px;cursor:pointer;box-shadow:0 6px 18px rgba(11,36,84,.16);transition:transform .18s ease,box-shadow .18s ease}
+.a2hs-pill button:active{transform:scale(.97)}
+.a2hs-pill .close{background:transparent;color:var(--muted);box-shadow:none;padding:4px;font-size:14px}
+
 
 /* =======================================================================
    WELCOME
@@ -58,8 +87,9 @@ body{
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 .welcome-title{font-size:42px;font-weight:900;margin:0 0 12px;background:linear-gradient(135deg,var(--blue),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .welcome-subtitle{font-size:16px;color:var(--muted);margin:0 0 28px;line-height:1.6;max-width:320px}
-.welcome-btn{background:var(--blue);color:#fff;border:none;border-radius:16px;padding:15px 44px;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 12px 32px rgba(11,102,255,.35);transition:transform .2s,box-shadow .2s}
-.welcome-btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(11,102,255,.45)}
+.welcome-btn{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;border:none;border-radius:20px;padding:16px 48px;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 18px 42px rgba(11,102,255,.32);transition:transform .2s,box-shadow .2s,filter .2s}
+.welcome-btn:hover{transform:translateY(-3px);box-shadow:0 22px 54px rgba(11,102,255,.42);filter:saturate(1.05)}
+.welcome-btn:active{transform:translateY(-1px)}
 
 /* =======================================================================
    PROFILE SETUP
@@ -74,37 +104,115 @@ body{
 .brand{display:flex;flex-direction:column}
 .brand h1{font-size:26px;font-weight:900;letter-spacing:-.01em;margin:0}
 .brand small{color:var(--muted);font-size:12px}
-.header-right{display:flex;align-items:center;gap:10px}
-.profile-icon{width:40px;height:40px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;cursor:pointer}
-.switch{display:flex;align-items:center;gap:6px}
-.toggle{appearance:none;width:44px;height:24px;background:#cfd8ff44;border-radius:999px;position:relative;cursor:pointer;outline:none}
-.toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .18s}
-.toggle:checked::after{left:23px}
+.header-right{display:flex;align-items:center;gap:12px}
+.profile-icon{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(11,102,255,.28);transition:transform .18s}
+.profile-icon:hover{transform:translateY(-2px)}
+.theme-switch{display:flex;align-items:center;gap:10px;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,rgba(234,240,255,.86),rgba(255,255,255,.76));box-shadow:0 12px 28px rgba(15,36,84,.14);backdrop-filter:blur(12px);border:1px solid rgba(182,198,250,.45)}
+.theme-switch .theme-label{font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;color:var(--muted);user-select:none;cursor:pointer;transition:color .22s ease,transform .22s ease}
+.theme-switch .theme-label[aria-pressed="true"]{color:var(--blue);transform:translateY(-1px)}
+.theme-switch .theme-label:focus-visible{outline:2px solid color-mix(in srgb,var(--blue) 70%,#fff 30%);outline-offset:3px;border-radius:999px}
+.theme-switch .toggle{appearance:none;width:46px;height:24px;border-radius:999px;background:#cfd8ff55;border:1px solid rgba(160,176,232,.55);position:relative;cursor:pointer;transition:background .3s ease,border-color .3s ease,box-shadow .3s ease}
+.theme-switch .toggle::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:left .3s ease,box-shadow .3s ease,background .3s ease}
+.theme-switch .toggle:checked{background:linear-gradient(135deg,var(--blue),var(--blue-2));border-color:rgba(11,102,255,.55);box-shadow:0 8px 18px rgba(11,102,255,.32)}
+.theme-switch .toggle:checked::after{left:24px;box-shadow:0 6px 14px rgba(11,102,255,.35)}
+.theme-switch .toggle:focus-visible{box-shadow:0 0 0 3px rgba(11,102,255,.28)}
+html[data-theme="dark"] .theme-switch{background:linear-gradient(135deg,rgba(32,44,90,.9),rgba(44,60,118,.86));box-shadow:0 30px 60px rgba(0,0,0,.66);border:1px solid rgba(104,138,216,.6)}
+html[data-theme="dark"] .theme-switch .theme-label{color:color-mix(in srgb,var(--muted) 60%,#fff 40%)}
+html[data-theme="dark"] .theme-switch .theme-label[aria-pressed="true"]{color:var(--blue)}
+html[data-theme="dark"] .theme-switch .toggle{background:linear-gradient(135deg,rgba(54,70,130,.88),rgba(64,84,146,.82));border-color:rgba(116,146,224,.74)}
+html[data-theme="dark"] .theme-switch .toggle::after{background:linear-gradient(135deg,#fdfdff,#e6ecff);box-shadow:0 8px 18px rgba(0,0,0,.5)}
+html[data-theme="dark"] .theme-switch .toggle:checked{box-shadow:0 14px 28px rgba(52,114,255,.52);border-color:rgba(122,162,255,.9)}
+html[data-theme="dark"] .theme-switch .toggle:checked::after{box-shadow:0 14px 26px rgba(38,90,210,.58)}
+html[data-theme="dark"] .theme-switch .toggle:focus-visible{box-shadow:0 0 0 3px rgba(68,136,255,.55)}
 
 /* Tabs WITHOUT profile */
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 12px}
-.tab{border:none;border-radius:13px;background:#eaf0ff66;color:var(--text);font-weight:800;font-size:13px;padding:10px 0;cursor:pointer;transition:transform .12s,box-shadow .2s}
-.tab.active{background:var(--blue);color:#fff;box-shadow:0 10px 22px rgba(11,102,255,.25)}
+.tab{border:none;border-radius:13px;background:#eaf0ff66;color:var(--text);font-weight:800;font-size:13px;padding:10px 0;cursor:pointer;transition:transform .12s,box-shadow .2s,background .25s ease,color .25s ease}
+.tab:active{transform:scale(.98)}
+.tab.active{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;box-shadow:0 12px 28px rgba(11,102,255,.25)}
 
 /* =======================================================================
    CARDS + FORM ELEMENTS
    ======================================================================= */
-.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 14px;margin-bottom:14px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 16px;margin-bottom:16px;position:relative;overflow:hidden}
+.card::before{
+  content:""; position:absolute; inset:-1px; border-radius:inherit;
+  border:1px solid rgba(255,255,255,.28); background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,0));
+  pointer-events:none; mix-blend-mode:soft-light;
+}
 h2{margin:0 0 10px;text-align:center;color:var(--blue);font-size:18px}
 label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font-size:15px;background:transparent;color:var(--text)}
-input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 2px rgba(11,102,255,.15)}
+input,select,textarea{width:100%;padding:12px 14px;border:1px solid color-mix(in srgb,var(--line) 80%,transparent);border-radius:14px;font-size:15px;background:rgba(255,255,255,.6);color:var(--text);transition:border .2s ease,box-shadow .2s ease,background .2s ease}
+input:focus,select:focus,textarea:focus{border-color:color-mix(in srgb,var(--blue) 80%,#fff 20%);outline:none;box-shadow:0 0 0 3px rgba(11,102,255,.15);background:#fff}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:rgba(18,26,54,.92);border:1px solid rgba(122,150,236,.78);color:var(--text);box-shadow:0 24px 52px rgba(0,0,0,.68)}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] select::placeholder,html[data-theme="dark"] textarea::placeholder{color:color-mix(in srgb,var(--muted) 55%,#fff 45%)}
+html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus,html[data-theme="dark"] textarea:focus{background:rgba(24,34,70,.98);box-shadow:0 0 0 3px rgba(91,148,255,.62);border-color:rgba(156,194,255,.88)}
 .row{display:flex;gap:8px;margin-top:10px}
-.btn{flex:1;border:none;border-radius:12px;padding:12px 0;font-size:14px;font-weight:900;color:#fff;cursor:pointer;transition:opacity .12s,transform .12s,box-shadow .2s}
+.calc-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.calc-actions .btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:58px;padding:14px 0;touch-action:manipulation}
+.btn{flex:1;border:none;border-radius:14px;padding:13px 0;font-size:15px;font-weight:900;color:#fff;cursor:pointer;transition:opacity .12s,transform .12s,box-shadow .2s,filter .2s}
 .btn:hover{opacity:.95}
-.btn:active{transform:translateY(1px)}
+.btn:active{transform:translateY(1px);filter:brightness(.95)}
 .btn-full{width:100%}
-.blue{background:var(--blue)} .green{background:var(--green)} .red{background:var(--red)} .yellow{background:var(--yellow);color:#111} .gray{background:#e9eef8;color:#111}
+.blue{background:linear-gradient(135deg,var(--blue),var(--blue-2))}
+.green{background:linear-gradient(135deg,#16a34a,var(--green))}
+.red{background:linear-gradient(135deg,#f87171,var(--red))}
+.yellow{background:linear-gradient(135deg,#fde047,var(--yellow));color:#111}
+.gray{background:linear-gradient(135deg,#f3f4f6,#e5e7eb);color:#111}
+html[data-theme="dark"] .btn{box-shadow:0 22px 52px rgba(0,0,0,.66)}
+html[data-theme="dark"] .btn:hover{filter:brightness(1.07);box-shadow:0 28px 64px rgba(4,10,32,.7)}
+html[data-theme="dark"] .blue{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+html[data-theme="dark"] .green{background:linear-gradient(135deg,#199652,#22c55e)}
+html[data-theme="dark"] .red{background:linear-gradient(135deg,#f66f6f,#ef4444)}
+html[data-theme="dark"] .yellow{background:linear-gradient(135deg,#facc15,#fde047);color:#141100}
+html[data-theme="dark"] .gray{background:linear-gradient(135deg,#202b4a,#323e68);color:var(--text)}
+html[data-theme="dark"] .card{background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:var(--shadow);border:1px solid rgba(112,144,214,.46)}
+html[data-theme="dark"] .card::before{border:1px solid rgba(142,170,232,.3);background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,0))}
+html[data-theme="dark"] .tab{background:linear-gradient(135deg,rgba(36,48,92,.88),rgba(24,34,70,.88));color:color-mix(in srgb,var(--muted) 55%,#fff 45%);box-shadow:0 24px 54px rgba(0,0,0,.6);border:1px solid rgba(92,120,200,.42)}
+html[data-theme="dark"] .tab.active{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fefeff;box-shadow:0 30px 64px rgba(59,130,246,.48);border-color:rgba(132,172,255,.68)}
+html[data-theme="dark"] .result{background:linear-gradient(135deg,rgba(60,128,246,.38),rgba(151,109,255,.32));color:#fdfdff;border-color:rgba(154,186,255,.56);box-shadow:0 26px 56px rgba(4,10,28,.68)}
+html[data-theme="dark"] footer{color:color-mix(in srgb,var(--muted) 48%,#fff 52%)}
+html[data-theme="dark"] .funny-threat{background:linear-gradient(135deg,rgba(40,56,112,.9),rgba(28,40,84,.86));border-color:rgba(126,154,226,.5);box-shadow:0 26px 60px rgba(0,0,0,.58);color:color-mix(in srgb,var(--muted) 52%,#fff 48%)}
 
 /* Calculator result + coach bubble */
-.result{background:#f4f8ff;border:1px dashed #dbe5ff;color:#0b2a66;border-radius:12px;padding:10px 12px;font-weight:800;text-align:center}
-.bubble{position:fixed;right:12px;bottom:80px;max-width:280px;background:var(--blue);color:#fff;padding:12px 14px;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.35);font-size:13px;z-index:1200;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s}
+.result{background:linear-gradient(135deg,rgba(76,106,255,.12),rgba(143,109,255,.14));border:1px solid rgba(108,130,255,.3);color:#0b2a66;border-radius:14px;padding:12px 14px;font-weight:800;text-align:center;box-shadow:0 10px 24px rgba(15,36,84,.1)}
+.bubble{position:fixed;right:12px;bottom:80px;max-width:280px;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;padding:14px 16px;border-radius:18px;box-shadow:0 18px 44px rgba(0,0,0,.38);font-size:13px;z-index:1200;opacity:0;transform:translateY(14px) scale(.98);transition:opacity .25s,transform .3s cubic-bezier(.22,1,.36,1)}
 .bubble.show{opacity:1;transform:translateY(0)}
+
+/* =======================================================================
+   MOBILE FIRST TWEAKS & MOTION PREFERENCES
+   ======================================================================= */
+@media (max-width:600px){
+  .container{padding:16px 12px 96px}
+  .app-header{padding:4px 0}
+  .brand h1{font-size:24px}
+  .tabs{gap:8px}
+  .card{padding:16px 14px}
+  .row{flex-direction:column}
+  .calc-actions{grid-template-columns:1fr}
+  .controls{grid-template-columns:1fr;gap:10px}
+  .bubble{right:10px;left:10px;max-width:none}
+}
+@media (max-width:420px){
+  .welcome-title{font-size:36px}
+  .welcome-subtitle{font-size:15px}
+  .welcome-btn{width:100%;padding:16px 0;font-size:17px}
+  .app-header{flex-direction:column;align-items:flex-start;gap:12px}
+  .tabs{grid-template-columns:repeat(2,1fr)}
+  .tab{font-size:14px;padding:12px 0}
+  .card{border-radius:18px}
+  input,select,textarea{font-size:16px}
+}
+@media (max-width:360px){
+  body::before,body::after{transform:scale(.8)}
+  .welcome-title{font-size:32px}
+  .pill{font-size:10px}
+  .profile-icon{width:36px;height:36px;font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition:none !important;scroll-behavior:auto !important}
+  body::before,body::after{display:none}
+}
 
 /* Results list */
 .controls{display:grid;grid-template-columns:1fr 120px 120px;gap:8px;margin-bottom:10px}
@@ -119,20 +227,34 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);outline:none;bo
 .icon-btn{border:none;background:#eef2ff;color:#0b2a66;border-radius:10px;padding:8px;cursor:pointer}
 .icon-btn.danger{background:#ffe5e5;color:#7d1b1b}
 .icon-btn.secondary{background:#eaf9ef;color:#124d2a}
+html[data-theme="dark"] .item{border-bottom:1px solid rgba(92,116,178,.6)}
+html[data-theme="dark"] .badge{background:linear-gradient(135deg,rgba(60,82,140,.58),rgba(50,70,126,.52));color:#f8faff}
+html[data-theme="dark"] .b-green{background:linear-gradient(135deg,rgba(42,164,114,.38),rgba(30,118,84,.34));color:#c6ffe6}
+html[data-theme="dark"] .b-red{background:linear-gradient(135deg,rgba(204,78,116,.38),rgba(150,46,80,.34));color:#ffe1e7}
+html[data-theme="dark"] .icon-btn{background:linear-gradient(135deg,rgba(44,60,112,.88),rgba(32,46,90,.86));color:#eaf1ff;box-shadow:0 16px 36px rgba(0,0,0,.56)}
+html[data-theme="dark"] .icon-btn.danger{background:linear-gradient(135deg,rgba(134,44,84,.82),rgba(110,34,70,.8));color:#ffd1dd}
+html[data-theme="dark"] .icon-btn.secondary{background:linear-gradient(135deg,rgba(44,112,88,.82),rgba(32,86,66,.78));color:#c8ffe9}
 
 /* Undo snackbar */
 .snack{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#101828;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;z-index:1300}
 .snack button{background:#fff;color:#111;border:none;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer}
+.funny-threat{margin:18px auto 0;max-width:360px;padding:10px 16px;border-radius:14px;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid color-mix(in srgb,var(--line) 65%,transparent);box-shadow:0 12px 30px rgba(15,36,84,.08);font-size:12px;line-height:1.5;color:var(--muted);text-align:center;opacity:0;transform:translateY(6px);transition:opacity .28s ease,transform .28s ease;pointer-events:none}
+.funny-threat.show{opacity:1;transform:translateY(0)}
+html[data-theme="dark"] .snack{background:linear-gradient(135deg,rgba(20,30,62,.92),rgba(14,20,46,.9));box-shadow:0 28px 62px rgba(0,0,0,.62)}
+html[data-theme="dark"] .snack button{background:linear-gradient(135deg,rgba(112,168,255,.92),rgba(88,140,246,.88));color:#03102c}
 
 /* Stats */
 .stat-legend{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 10px}
 .dot{width:12px;height:12px;border-radius:50%}
 .dot.green{background:var(--green)} .dot.red{background:var(--red)}
 canvas{width:100%;height:auto;border-radius:12px;background:#ffffff08}
+html[data-theme="dark"] canvas{background:rgba(16,24,52,.88);border:1px solid rgba(108,134,204,.45);box-shadow:0 18px 40px rgba(0,0,0,.58)}
 
 /* Goals */
 .progress{height:12px;background:#e8ecff;border-radius:999px;overflow:hidden}
 .progress .bar{height:100%;background:linear-gradient(135deg,var(--green),#66e3a0);width:0%}
+html[data-theme="dark"] .progress{background:rgba(44,62,108,.7)}
+html[data-theme="dark"] .progress .bar{background:linear-gradient(135deg,#34f0a0,#64f5b8)}
 
 /* Modals */
 .modal{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:1500;padding:16px}
@@ -156,7 +278,7 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
   <div class="welcome-logo">⏰</div>
   <h1 class="welcome-title">Munkaóra</h1>
   <p class="welcome-subtitle">Tudd meg, hány munkaórádba kerülnek a dolgok, és hozz okosabb döntéseket!<br>
-    <span class="pill">+ Apádhelyett Anyád 😏</span>
+    <span class="pill">+ Szia Lajos! 😏</span>
   </p>
   <button class="welcome-btn" id="startBtn" aria-label="Kezdjük">Kezdjük! 🚀</button>
 </div>
@@ -193,7 +315,11 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
       <small>Tudd, hány órát dolgozol a vágyaidért.</small>
     </div>
     <div class="header-right">
-      <div class="switch"><input id="themeToggle" class="toggle" type="checkbox" aria-label="Sötét mód kapcsoló" /></div>
+      <div class="theme-switch" role="group" aria-label="Téma váltása">
+        <span class="theme-label" data-theme="light" role="button" aria-pressed="false" tabindex="0">🌞 Világos</span>
+        <input id="themeToggle" class="toggle" type="checkbox" role="switch" aria-label="Sötét mód kapcsoló" aria-checked="false" />
+        <span class="theme-label" data-theme="dark" role="button" aria-pressed="false" tabindex="0">🌙 Sötét</span>
+      </div>
       <div class="profile-icon" id="profileIcon" title="Profil">👤</div>
     </div>
   </div>
@@ -219,9 +345,9 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
     <div id="calcResult" class="hidden mt-12">
       <p class="result" id="workHoursText"></p>
       <p class="center small" id="hourlyHint"></p>
-      <div class="row">
-        <button class="btn green" id="saveBtn">Megspórolom 💚</button>
-        <button class="btn red" id="buyBtn">Megveszem 💸</button>
+      <div class="calc-actions">
+        <button class="btn green" id="saveBtn" type="button">Megspórolom 💚</button>
+        <button class="btn red" id="buyBtn" type="button">Megveszem 💸</button>
       </div>
       <p class="small mt-6 center">A mentéshez válaszd ki, hogy spórolod vagy megveszed.</p>
     </div>
@@ -289,7 +415,14 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
     </div>
   </section>
 
-  <footer class="mt-16">© 2025 Munkaóra • Apádhelyett Anyád 😏</footer>
+  <div id="funnyThreat" class="funny-threat" role="status" aria-live="polite"></div>
+  <div id="a2hsPill" class="a2hs-pill" role="dialog" aria-live="polite" aria-label="Add hozzá a Munkaóra appot">
+    <span>Hozzáadnád a Munkaóra appot a kezdőképernyődhöz?</span>
+    <button id="a2hsAction" type="button">Telepítés</button>
+    <button id="a2hsClose" class="close" type="button" aria-label="Bezárás">✕</button>
+  </div>
+
+  <footer class="mt-16">© 2025 Munkaóra • Szia Lajos! 😏</footer>
 
   <div id="coach" class="bubble" role="status" aria-live="polite"></div>
   <div id="snack" class="snack hidden"></div>
@@ -359,7 +492,13 @@ const Data={
     if(v<2){
       ["saved","spent"].forEach(key=>{
         const arr=Data.get(key)||[];
-        arr.forEach(it=>{ if(!it.at) it.at=now(); if(it.name && typeof it.name!=="string") it.name=String(it.name); });
+        arr.forEach(it=>{
+          if(!it.at) it.at=now();
+          if(it.name && typeof it.name!=="string") it.name=String(it.name);
+          if(!it.type) it.type=key;
+          if(typeof it.price!=="number") it.price=Number(it.price)||0;
+          if(typeof it.hours!=="number") it.hours=Number(it.hours)||0;
+        });
         Data.set(key,arr);
       });
       Data.set("__schema",2);
@@ -371,12 +510,43 @@ const API={
   profile:()=>Data.get("profile"),
   saveProfile:(p)=>Data.set("profile",p),
   deleteProfile:()=>{["profile","saved","spent","goals"].forEach(Data.del)},
-  list:(type)=>Data.get(type)||[],
-  add:(type,item)=>{const list=Data.get(type)||[];list.unshift({...item,at:now(),type});Data.set(type,list)},
-  setList:(type,list)=>Data.set(type,list),
+  list:(type)=>{
+    const list=Data.get(type)||[];
+    return list.map(it=>({...it,type:it.type||type}));
+  },
+  add:(type,item)=>{
+    const list=Data.get(type)||[];
+    const normalized={
+      name:item.name||"",
+      price:Number(item.price)||0,
+      hours:Number(item.hours)||0,
+      at:now(),
+      type
+    };
+    list.unshift(normalized);
+    Data.set(type,list);
+  },
+  setList:(type,list)=>{
+    const normalized=list.map(it=>({
+      ...it,
+      type:it.type||type,
+      price:Number(it.price)||0,
+      hours:Number(it.hours)||0
+    }));
+    Data.set(type,normalized);
+  },
   clearLists:()=>{Data.set("saved",[]);Data.set("spent",[])},
-  theme:()=>Data.get("theme")||"light",
-  setTheme:(t)=>Data.set("theme",t),
+  theme:()=>{
+    const savedTheme=localStorage.getItem("theme");
+    if(savedTheme==="dark"||savedTheme==="light") return savedTheme;
+    if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+    return "light";
+  },
+  setTheme:(t)=>{
+    const next=t==="dark"?"dark":"light";
+    localStorage.setItem("theme",next);
+    return next;
+  },
   goals:()=>Data.get("goals")||{monthlyCap:0,savingGoal:0},
   saveGoals:(g)=>Data.set("goals",g),
   exportAll:()=>({__schema:schemaVersion,profile:API.profile(),saved:API.list("saved"),spent:API.list("spent"),goals:API.goals(),theme:API.theme()}),
@@ -387,58 +557,156 @@ const API={
     if(Array.isArray(obj.saved)) Data.set("saved",obj.saved);
     if(Array.isArray(obj.spent)) Data.set("spent",obj.spent);
     if(obj.goals) Data.set("goals",obj.goals);
-    if(obj.theme) Data.set("theme",obj.theme);
+    if(obj.theme) API.setTheme(obj.theme);
     Data.set("__schema",schemaVersion);
   }
 };
 
 /* =======================================================================
-   COACH MESSAGES (sok, hogy mindig változatos legyen)
+   COACH BUBBLE CONTEXTUAL MESSAGES
    ======================================================================= */
-const COACH=[
-"Ejnye, ezért most sokat fogsz dolgozni. 😬","A pénztárcád halk sírást hallatott. 💸","A jövőbeli éned most csóválja a fejét.",
-"Ha boldoggá tesz, oké – de sok órádba kerül.","Ez már a 'drága, de kell' kategória? 🤨","A bankszámlád szabadságra ment.",
-"10 órán túl? Anyád felhívna. 🫨","Legközelebb írd be: 'gondolkozzak még'.","A racionalitás most ebédel. 🍽️","Legalább szép lesz. Reméljük.",
-"Ez egy hosszú műszak ára. ⏳","Instant dopamin, tartós mínusz. ⚡️","A lelkiismereted most offline.","Kávé helyett most dolgozol érte még párat.",
-"Nem muszáj, de megtetted. 😅","A matek nem tapsol most. 🧮","Ezen most a pénzügyi coach felszisszent.","Oké, de használd is naponta!",
-"A józan ész most AFK. 📴","Ha meghoznád újra ezt a döntést? Biztos?","Egy tétel, két sóhaj. 😮‍💨","Ez a 'szív döntött' vásárlás.",
-"Minimum egy hétvége ment rá.","Nem rossz, csak… drága.","Ha akciós volt, kicsit kevésbé fáj.","A 'majd visszateszem' gomb letiltva? 😏",
-"Ezt a döntést screenshotolom a tanmeséhez. 📸","Kis lépés a tárgy felé, nagy lépés a mínuszba.","Érzed azt a kis bökést? Az a bankkártya. 💳",
-"Na… legalább sztori lesz. 📖","A spórolás most szünetel. 🧘","Ha ezt megspóroltad volna…","Ez már 'luxus-szagú' döntés. 💎",
-"A jövő heti ebéded integet. 🍝","10+ óra? Ez már szerelem.","Tudod, hogy ezért túlórázol majd?","A költségvetésed most kér egy ölelést.",
-"Ez a vásárlás beszélgetést érdemel.","A mérleg: öröm + bűntudat = egyenleg?","Az ész helyett a szem döntött. 👀","Valaki most nagyon boldog (a kereskedő).",
-"Reméljük legalább tartós.","Ha ez motivál a munkára – rendben. 💪","Pénzügyi edzés: ma farizom + pénztárca.","Ezt a 'szükséges' szót feszegetjük.",
-"A spórolásod most levegőt vesz.","Kedves, de költséges.","A 'csak megnézem' után ez lett. 🛒","Én szóltam volna… ha kérdezel. 😉",
-"Egy tárgy, sok óra. Jó csere?","A fej számol, a szív vásárol.","Ha ezt bérben mérnénk, sok lenne.","Majd amikor jön a rezsi, emlékezz. 🧾",
-"Ez már 'felnőtt döntés' – ára van.","A bankod is látta ezt, ugye? 👀","Ha ez örömöt hoz, oké – de sokba került.","Instant jó érzés, késleltetett fájás.",
-"Nem baj, tanulópénz. Drága tanulópénz.","Anyai sóhaj: *hosszan*. 😮‍💨","Ha ezt eladnád később… kérdéses.","Ez már 'jó, de muszáj volt?' kategória.",
-"Következőre írj listát. 📝","A határidők is integetnek most. ⏰","A spórolásod megbicsaklott.","A pénzed kicsit elszaladt kávézni. ☕",
-"Egy 'majd legközelebb' gomb hiányzott.","Ezt a döntést a jövőbeli te értékelni fogja? 🤔","Tarts egy 24 órás szabályt legközelebb.",
-"Most már legalább motivált vagy dolgozni. 😅","A költségvetésed kér egy meetinget. 📊","Ez kérem préselt munkaórákból készült. 🔧",
-"A hitelkártyád halkan remeg.","Ez az élmény reméljük nem múló.","Ha ezt egyszerűen 'kellett' – jó van.","Az ész: 'nem', a vágy: 'igen'.",
-"A pénzügyi határ most kicsit csúszott.","A 'spórolom' gomb is ott volt ám.","Kicsit több lett, mint 'apró'.","Legalább kipipálhatsz valamit a listán.",
-"Gondold át: 10+ óra = ez a tárgy.","A kompromisszumok drágák.","A minimalizmus most elfordult. 🧘‍♂️","Na jól van, de most spórolós hét jön!",
-"A pénzügyi én-ed most sír.","Ha ez hobbi: oké. Ha hóbort: kétszer gondold át.","A 'miért' erősebb volt, mint a 'mennyi'.",
-"Egy kis bűntudat, egy nagy doboz. 📦","Közelebb kerültél hozzá – a bankszámla távolabb.","Az ár-érték arány most vitatott.",
-"Ez a 'megérdemlem' pillanat?","Jutalomvásárlás? Akkor hajrá – ritkán.","A türelem gyakran olcsóbb. ⏳","A 'most azonnal kell' a legdrágább.",
-"Ha a munkád boldoggá tesz – megdolgoztál érte.","A jövőbeli számlák nem felejtenek.","A keret csipogott. 📉","A döntés megvan – most használd is, sokat!",
-"Minimum 10 óra – maximum öröm?","Ha ez inspirál: nyertél. Ha nem: tanultál.","Oké, de a következő legyen 'Megspórolom'.",
-"A bankod eddig bírta nevetés nélkül. 😬","Minden rendben – csak most kicsit drága lett.","A spórolásod most visszaszámol.",
-"Ezt még Anyád is megkérdezné: kellett?","Zárjuk le: használd egészséggel, okosan. ✅"
+const COACH_CONTEXTS={
+  startup:[
+    "Szia Lajos! Nézzük, mennyi időt dolgoztál a vágyaidért. ⏳",
+    "Üdv újra, Lajos! Készen állsz egy kis pénzügyi matekra? 📈",
+    "Szia Lajos! Mutasd, mire gyűjtöttél mostanában. 💼"
+  ],
+  save:[
+    "Szépen spórolsz, Lajos! 💰",
+    "Ez igen, újabb munkaóra megmentve! 🙌",
+    "Szuper döntés, Lajos – így épül a tartalék. 🛡️",
+    "Most tényleg közelebb kerültél a célodhoz! 🏁"
+  ],
+  spend:[
+    "Hát ez most elment, de legalább hasznos volt. 😉",
+    "Megérte? Gondold át legközelebb! 💸",
+    "Egy kis öröm most, több munkaórád ment el. ⏱️",
+    "Oké, Lajos, de holnap spórolós nap jön! 😅"
+  ],
+  results:[
+    "Itt az eredmény, Lajos! 📊",
+    "Nézd meg, mennyit haladtál! 🚀",
+    "A számok nem hazudnak – ez a mérleged most. ⚖️",
+    "Ez a teljesítményed összefoglalva. 📘"
+  ]
+};
+
+/* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
+   ======================================================================= */
+const positiveMessages=[
+  "Szia Lajos, most épp egy lépéssel közelebb vagy a szabadsághoz.",
+  "Okos döntés, Lajos – még pár ilyen, és lesz nyaralásod is.",
+  "Spórolni nem menő, csak hasznos – és te most hasznos vagy.",
+  "A jövőbeli Lajos koccint rád egy ásványvízzel.",
+  "A bankszámlád hálás, még ha nem is tud beszélni.",
+  "Na látod, működik az önuralom, nem csak legenda.",
+  "Lassan, de biztosan, Lajos – a türelem forintot terem.",
+  "Egy kicsit most gazdagabb vagy, még ha csak lélekben is.",
+  "Szia Lajos, ez volt a felnőtt élet első jele.",
+  "Ha minden nap így döntesz, egyszer te leszel a motivációs poszt."
+];
+
+const negativeMessages=[
+  "Megvetted? Szép. A pénztárcád sír, de legalább te boldog vagy.",
+  "Szia Lajos, most megint eladtad a jövőd egy kávéért.",
+  "Gratulálok, a célod most épp hátrébb lépett kettőt.",
+  "Nem baj, legalább gazdagabb lettél tapasztalatban.",
+  "A spórolás várhat – mondta még senki, aki elérte a célját.",
+  "Lajos, a költekezés öröm – rövid távon.",
+  "Még egy ilyen döntés, és a célod már csak mese lesz.",
+  "Ha a pénz beszél, most épp azt mondta: viszlát.",
+  "Jó választás lenne… egy másik univerzumban.",
+  "Szia Lajos, a jövőbeli éned most épp kikapcsolta a Wi-Fit, hogy ne lássa ezt."
 ];
 
 /* =======================================================================
    UI HELPERS
    ======================================================================= */
 const UI={
-  setTheme(theme){document.documentElement.setAttribute("data-theme",theme);$("#themeToggle").checked=(theme==="dark");API.setTheme(theme)},
-  snack(msg,withUndo,undoFn){
-    const s=$("#snack"); s.classList.remove("hidden"); s.innerHTML="";
-    const t=document.createElement("span"); t.textContent=msg; s.appendChild(t);
-    if(withUndo){const b=document.createElement("button"); b.textContent="Visszavonás"; b.addEventListener("click",()=>{undoFn&&undoFn(); s.classList.add("hidden");}); s.appendChild(b);}
-    setTimeout(()=>s.classList.add("hidden"),3500);
+  snackTimer:null,
+  coachTimer:null,
+  coachDelayTimer:null,
+  actionMessageTimer:null,
+  setTheme(theme){
+    const applied=API.setTheme(theme);
+    document.documentElement.setAttribute("data-theme",applied);
+    document.documentElement.dataset.theme=applied;
+    const toggle=$("#themeToggle");
+    if(toggle){
+      const checked=(applied==="dark");
+      toggle.checked=checked;
+      toggle.setAttribute("aria-checked",String(checked));
+    }
+    $$(".theme-label[data-theme]").forEach(label=>{
+      const isActive=label.dataset.theme===applied;
+      label.setAttribute("aria-pressed",String(isActive));
+    });
   },
-  coach(text){const b=$("#coach"); b.textContent="Apádhelyett Anyád: "+text; b.classList.add("show"); setTimeout(()=>b.classList.remove("show"),2400);}
+  snack(msg,withUndo,undoFn){
+    const s=$("#snack");
+    if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
+    s.classList.remove("hidden"); s.innerHTML="";
+    const t=document.createElement("span"); t.textContent=msg; s.appendChild(t);
+    if(withUndo){
+      const b=document.createElement("button");
+      b.textContent="Visszavonás";
+      b.addEventListener("click",()=>{
+        if(undoFn) undoFn();
+        s.classList.add("hidden");
+        if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
+      });
+      s.appendChild(b);
+    }
+    this.snackTimer=setTimeout(()=>{
+      s.classList.add("hidden");
+      this.snackTimer=null;
+    },3500);
+  },
+  coach(context,opts={}){
+    const pool=COACH_CONTEXTS[context];
+    if(!pool||!pool.length) return;
+    const delay=Math.max(0,Number(opts.delay)||0);
+    const duration=Math.max(1200,Number(opts.duration)||2800);
+    const run=()=>{
+      const b=$("#coach");
+      if(!b) return;
+      if(this.coachTimer){clearTimeout(this.coachTimer); this.coachTimer=null;}
+      b.classList.remove("show");
+      void b.offsetWidth;
+      b.textContent=pool[Math.floor(Math.random()*pool.length)];
+      b.classList.add("show");
+      this.coachTimer=setTimeout(()=>{
+        b.classList.remove("show");
+        this.coachTimer=null;
+      },duration);
+    };
+    if(this.coachDelayTimer){clearTimeout(this.coachDelayTimer); this.coachDelayTimer=null;}
+    if(delay>0){
+      this.coachDelayTimer=setTimeout(()=>{run(); this.coachDelayTimer=null;},delay);
+    }else{
+      run();
+    }
+  }
+};
+
+UI.showActionMessage=function(kind){
+  const el=$("#funnyThreat");
+  if(!el) return;
+  const pool=kind==="positive"?positiveMessages:kind==="negative"?negativeMessages:[];
+  if(!pool.length) return;
+  if(UI.actionMessageTimer){
+    clearTimeout(UI.actionMessageTimer);
+    UI.actionMessageTimer=null;
+  }
+  el.classList.remove("show");
+  void el.offsetWidth;
+  el.textContent=pool[Math.floor(Math.random()*pool.length)];
+  el.classList.add("show");
+  UI.actionMessageTimer=setTimeout(()=>{
+    el.classList.remove("show");
+    UI.actionMessageTimer=null;
+  },3000);
 };
 
 /* =======================================================================
@@ -457,9 +725,15 @@ const App={
     this.bindGoals();
     this.bindProfileModal();
     this.bindShortcuts();
-    const p=API.profile();
-    if(p){$("#welcomeScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");this.updateProfileIcon();this.syncCalcHello();}
     UI.setTheme(API.theme());
+    const p=API.profile();
+    if(p){
+      $("#welcomeScreen").classList.add("hidden");
+      $("#appScreen").classList.remove("hidden");
+      this.updateProfileIcon();
+      this.syncCalcHello();
+      UI.coach("startup",{delay:500});
+    }
     this.setView("calc");
     this.renderResults();
     this.updateGoalsUI();
@@ -467,8 +741,16 @@ const App={
 
   /* ---------- Flow: Welcome → Profile ---------- */
   bindWelcome(){
-    $("#startBtn").addEventListener("click",()=>{$("#welcomeScreen").classList.add("hidden");$("#profileSetupScreen").classList.remove("hidden")});
-    $("#backToWelcome").addEventListener("click",()=>{$("#profileSetupScreen").classList.add("hidden");$("#welcomeScreen").classList.remove("hidden")});
+    const startBtn=$("#startBtn");
+    const backBtn=$("#backToWelcome");
+    if(startBtn) startBtn.addEventListener("click",()=>{
+      $("#welcomeScreen").classList.add("hidden");
+      $("#profileSetupScreen").classList.remove("hidden");
+    });
+    if(backBtn) backBtn.addEventListener("click",()=>{
+      $("#profileSetupScreen").classList.add("hidden");
+      $("#welcomeScreen").classList.remove("hidden");
+    });
   },
   bindProfileSetup(){
     $("#saveSetupProfile").addEventListener("click",()=>{
@@ -483,12 +765,37 @@ const App={
       $("#profileSetupScreen").classList.add("hidden");
       $("#appScreen").classList.remove("hidden");
       this.updateProfileIcon(); this.syncCalcHello();
+      UI.coach("startup",{delay:520});
     });
   },
 
   /* ---------- Theme ---------- */
   bindTheme(){
-    const t=$("#themeToggle"); t.addEventListener("change",()=>UI.setTheme(t.checked?"dark":"light")); UI.setTheme(API.theme());
+    const toggle=$("#themeToggle");
+    if(!toggle) return;
+    const applyTheme=(theme)=>UI.setTheme(theme);
+    const syncFromToggle=()=>applyTheme(toggle.checked?"dark":"light");
+    toggle.addEventListener("change",syncFromToggle);
+    toggle.addEventListener("keydown",(event)=>{
+      if(event.key==="Enter"){
+        event.preventDefault();
+        toggle.checked=!toggle.checked;
+        syncFromToggle();
+      }
+    });
+    $$(".theme-label[data-theme]").forEach(label=>{
+      const handler=()=>{
+        const target=label.dataset.theme==="dark"?"dark":"light";
+        applyTheme(target);
+      };
+      label.addEventListener("click",handler);
+      label.addEventListener("keydown",(event)=>{
+        if(event.key==="Enter"||event.key===" "){
+          event.preventDefault();
+          handler();
+        }
+      });
+    });
   },
 
   /* ---------- Tabs (no profile tab) ---------- */
@@ -496,17 +803,32 @@ const App={
     $$(".tab").forEach(tab=>tab.addEventListener("click",()=>this.setView(tab.dataset.view)));
     $$('[data-view="calc"]').forEach(b=>b.addEventListener("click",()=>this.setView("calc")));
   },
-  setView(v){
+  setView(v,opts={}){
+    const {coachDelay=null,suppressCoach=false}=opts||{};
     this.state.view=v;
     $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===v));
     $("#view-calc").classList.toggle("hidden",v!=="calc");
     $("#view-results").classList.toggle("hidden",v!=="results");
     $("#view-stats").classList.toggle("hidden",v!=="stats");
     $("#view-goals").classList.toggle("hidden",v!=="goals");
-    if(v==="results") this.renderResults();
+    if(v==="results"){
+      this.renderResults();
+      if(!suppressCoach){
+        let delay;
+        if(typeof coachDelay==="number"&&coachDelay>=0){
+          delay=coachDelay;
+        }else if(this.state.lastAction&&this.state.lastAction.timestamp&&(Date.now()-this.state.lastAction.timestamp)<2600){
+          delay=3200;
+        }else{
+          delay=220;
+        }
+        UI.coach("results",{delay});
+      }
+    }
     if(v==="stats") this.drawStats();
     if(v==="calc") this.syncCalcHello();
-    window.scrollTo({top:0,behavior:"smooth"});
+    const prefersReduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({top:0,behavior:prefersReduced?"auto":"smooth"});
   },
 
   /* ---------- Calculator ---------- */
@@ -519,20 +841,24 @@ const App={
       $("#workHoursText").textContent=`Kb. ${hours.toFixed(1)} munkaórádba kerülne (${fmtFt(price)}).`;
       $("#hourlyHint").textContent=`Jelenlegi órabéred ~ ${fmtFt(hourly)}/óra`;
       const r=$("#calcResult"); r.dataset.name=name; r.dataset.price=String(price); r.dataset.hours=String(hours); r.classList.remove("hidden");
-      UI.coach(COACH[Math.floor(Math.random()*COACH.length)]); // üzenet számoláskor
     };
     $("#calculateBtn").addEventListener("click",calc);
 
     const commit=(type)=>{
       const r=$("#calcResult"); const name=r.dataset.name; const price=Number(r.dataset.price); const hours=Number(r.dataset.hours);
-      if(!name||!price){alert("Előbb számolj!");return;}
+      if(!name||!price){alert("Előbb számolj!");return false;}
       API.add(type,{name,price,hours});
-      this.state.lastAction={type,entry:{name,price,hours,at:now()}};
+      const actionContext=type==="saved"?"save":"spend";
+      const timestamp=now();
+      this.state.lastAction={type,entry:{name,price,hours,at:timestamp},timestamp};
+      this.setView("results",{coachDelay:3600});
+      UI.showActionMessage(type==="saved"?"positive":"negative");
+      UI.coach(actionContext,{delay:220,duration:3000});
       $("#productName").value=""; $("#productPrice").value=""; r.classList.add("hidden");
-      this.setView("results");
+      return true;
     };
-    $("#saveBtn").addEventListener("click",()=>commit("saved"));
-    $("#buyBtn").addEventListener("click",()=>commit("spent"));
+    $("#saveBtn").addEventListener("click",()=>{commit("saved");});
+    $("#buyBtn").addEventListener("click",()=>{commit("spent");});
   },
   syncCalcHello(){
     const p=API.profile(); const h=$("#hello");
@@ -599,7 +925,11 @@ const App={
     let newPrice=prompt("Új ár (Ft):",String(item.price||0)); if(newPrice===null) return;
     newPrice=Number(newPrice); if(!newName.trim()||!newPrice||newPrice<=0){alert("Érvénytelen érték.");return;}
     const list=API.list(item.type).map(it=>{
-      if(it.at===item.at && it.name===item.name && it.price===item.price){return {...it,name:newName.trim(),price:newPrice}}
+      if(it.at===item.at && it.name===item.name && it.price===item.price){
+        const ratio=(Number(it.price)>0 && Number.isFinite(Number(it.hours)))?Number(it.hours)/Number(it.price):null;
+        const hours=ratio!==null?Number((ratio*newPrice).toFixed(1)):it.hours;
+        return {...it,name:newName.trim(),price:newPrice,hours};
+      }
       return it;
     });
     API.setList(item.type,list);
@@ -610,9 +940,20 @@ const App={
     const list=API.list(item.type);
     const idx=list.findIndex(it=>it.at===item.at && it.name===item.name && it.price===item.price);
     if(idx===-1) return;
-    const removed=list.splice(idx,1)[0]; API.setList(item.type,list);
+    const removed=list[idx];
+    const updated=list.filter((_,i)=>i!==idx);
+    API.setList(item.type,updated);
     this.renderResults(); this.drawStats();
-    UI.snack("Tétel törölve.",true,()=>{ list.splice(idx,0,removed); API.setList(item.type,list); this.renderResults(); this.drawStats(); });
+    UI.snack("Tétel törölve.",true,()=>{
+      const current=API.list(item.type);
+      if(current.some(it=>it.at===removed.at && it.name===removed.name && it.price===removed.price)) return;
+      const restored=[...current];
+      const insertAt=Math.min(idx,restored.length);
+      restored.splice(insertAt,0,removed);
+      API.setList(item.type,restored);
+      this.renderResults();
+      this.drawStats();
+    });
   },
 
   /* ---------- Stats ---------- */
@@ -692,7 +1033,65 @@ const App={
   }
 };
 
+const A2HS=(()=>{
+  const sessionKey="a2hs-dismissed";
+  let deferred=null;
+  let pill=null;
+  let action=null;
+  let close=null;
+  const isStandalone=()=>{
+    return (window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||window.navigator.standalone===true;
+  };
+  const storage={
+    mark(){try{sessionStorage.setItem(sessionKey,"1");}catch(e){}},
+    dismissed(){try{return sessionStorage.getItem(sessionKey)==="1";}catch(e){return false;}}
+  };
+  const hide=()=>{if(pill) pill.classList.remove("show");};
+  const show=()=>{if(!pill||!deferred||storage.dismissed()) return; pill.classList.add("show");};
+  const bindInteractions=()=>{
+    if(!pill||!action||!close) return;
+    close.addEventListener("click",()=>{hide();storage.mark();});
+    action.addEventListener("click",async()=>{
+      hide();
+      storage.mark();
+      if(!deferred) return;
+      deferred.prompt();
+      try{await deferred.userChoice;}catch(e){}
+      deferred=null;
+    });
+  };
+  return{
+    init(){
+      if(isStandalone()) return;
+      pill=document.querySelector("#a2hsPill");
+      action=document.querySelector("#a2hsAction");
+      close=document.querySelector("#a2hsClose");
+      if(!pill||!action||!close) return;
+      bindInteractions();
+      window.addEventListener("beforeinstallprompt",(event)=>{
+        event.preventDefault();
+        deferred=event;
+        show();
+      });
+      window.addEventListener("appinstalled",()=>{storage.mark();hide();});
+    }
+  };
+})();
+
+const registerServiceWorker=()=>{
+  if(!("serviceWorker" in navigator)) return;
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").then((reg)=>{
+      console.info("Service worker registered:",reg.scope);
+    }).catch((err)=>{
+      console.error("Service worker registration failed:",err);
+    });
+  });
+};
+
 App.init();
+A2HS.init();
+registerServiceWorker();
 </script>
 </body>
 </html>
