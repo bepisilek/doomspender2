@@ -391,38 +391,175 @@ footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
   <div id="snack" class="snack hidden"></div>
 </div>
 
-<!-- ==============================================================
-     PROFILE MODAL (ikonból)
-     ============================================================== -->
-<div id="profileModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Profil szerkesztése">
-  <div class="modal-content">
-    <h2>Profil szerkesztése</h2>
-    <label for="editName">Becenév</label>
-    <input id="editName" type="text" />
-    <label for="editAge">Kor</label>
-    <input id="editAge" type="number" min="1" />
-    <label for="editSalary">Nettó havi fizetés (Ft)</label>
-    <input id="editSalary" type="number" min="1" />
-    <label for="editHours">Heti munkaórák</label>
-    <input id="editHours" type="number" min="1" />
-    <div class="modal-actions">
-      <button class="btn blue" id="saveEditProfile">Mentés</button>
-      <button class="btn gray" id="closeModal">Mégse</button>
-      <button class="btn red" id="deleteProfile">Profil törlése</button>
+    <div id="profileModal" class="modal hidden" role="dialog" aria-labelledby="profileTitle">
+      <div class="modal__backdrop" data-close="profile"></div>
+      <section class="panel panel--modal">
+        <header class="modal__header">
+          <h2 id="profileTitle">Profil beállítása</h2>
+          <button class="icon-button" type="button" data-close="profile" aria-label="Bezárás">✕</button>
+        </header>
+        <form id="profileForm" class="form">
+          <div class="field">
+            <label for="profileName">Becenév</label>
+            <input id="profileName" name="name" type="text" required placeholder="pl. Lajos" />
+          </div>
+          <div class="field">
+            <label for="profileAge">Életkor</label>
+            <input id="profileAge" name="age" type="number" min="1" required placeholder="pl. 28" />
+          </div>
+          <div class="field">
+            <label for="profileSalary">Nettó havi fizetés (Ft)</label>
+            <input id="profileSalary" name="salary" type="number" min="1" required placeholder="pl. 450000" />
+          </div>
+          <div class="field">
+            <label for="profileHours">Heti munkaórák száma</label>
+            <input id="profileHours" name="hours" type="number" min="1" required placeholder="pl. 40" />
+          </div>
+          <footer class="modal__footer">
+            <button type="submit" class="btn btn--primary">Mentés</button>
+            <button type="button" id="profileReset" class="btn btn--ghost">Adatok törlése</button>
+          </footer>
+        </form>
+      </section>
     </div>
-  </div>
-</div>
 
-<!-- ==============================================================
-     SETTINGS MODAL (export/import/reset) – a profil ikon nélkül is jól jöhet
-     ============================================================== -->
-<div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Beállítások">
-  <div class="modal-content">
-    <h2>Beállítások</h2>
-    <div class="row">
-      <button class="btn blue" id="exportData">Export JSON</button>
-      <button class="btn green" id="importData">Import JSON</button>
-      <button class="btn red" id="resetAll">Teljes reset</button>
+    <div id="appShell" class="app hidden">
+      <header class="app__header">
+        <div class="brand">
+          <span class="brand__logo">⏰</span>
+          <div class="brand__copy">
+            <h1>Munkaóra</h1>
+            <p>Tudd, hány órát dolgozol a vágyaidért.</p>
+          </div>
+        </div>
+        <div class="app__actions">
+          <div class="theme-switch" aria-label="Téma kapcsoló" role="group">
+            <span class="theme-switch__label" aria-hidden="true">🌞 Világos</span>
+            <label class="theme-switch__control" for="themeToggle">
+              <input type="checkbox" id="themeToggle" role="switch" aria-label="Téma váltása" />
+              <span class="theme-switch__track"></span>
+            </label>
+            <span class="theme-switch__label" aria-hidden="true">🌙 Sötét</span>
+          </div>
+          <button id="profileButton" class="icon-button" type="button" aria-label="Profil megnyitása">👤</button>
+        </div>
+      </header>
+
+      <nav class="tabbar" role="tablist">
+        <button class="tab active" data-view="calc" role="tab" aria-selected="true">Kalkulátor</button>
+        <button class="tab" data-view="results" role="tab">Eredmények</button>
+        <button class="tab" data-view="stats" role="tab">Statisztika</button>
+        <button class="tab" data-view="goals" role="tab">Célok</button>
+      </nav>
+
+      <main class="views">
+        <section id="view-calc" class="view active" role="tabpanel" aria-labelledby="tab-calc">
+          <header class="view__header">
+            <h2>Kalkulátor</h2>
+            <p class="muted" id="welcomeHint">Szia! Kezdjük egy új tétellel.</p>
+          </header>
+          <form id="calcForm" class="form form--stack">
+            <div class="field">
+              <label for="productName">Termék neve</label>
+              <input id="productName" name="productName" type="text" placeholder="pl. AirPods Pro" required />
+            </div>
+            <div class="field">
+              <label for="productPrice">Termék ára (Ft)</label>
+              <input id="productPrice" name="productPrice" type="number" min="1" placeholder="pl. 79990" required />
+            </div>
+            <button type="submit" class="btn btn--accent">Kiszámolom</button>
+            <p id="calcAlert" class="alert hidden" role="alert"></p>
+          </form>
+          <div id="calcResult" class="result-card hidden" aria-live="polite">
+            <p id="resultText" class="result-card__title"></p>
+            <p id="resultDetail" class="muted"></p>
+            <div class="result-card__actions">
+              <button id="decisionSave" class="btn btn--success" type="button">Megspórolom 💚</button>
+              <button id="decisionBuy" class="btn btn--danger" type="button">Megveszem 💸</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-results" class="view" role="tabpanel" aria-labelledby="tab-results">
+          <header class="view__header">
+            <h2>Eredmények</h2>
+            <p class="muted">Összesített döntéseid és listáid.</p>
+          </header>
+          <div class="summary-grid">
+            <div class="summary-card">
+              <span>💚 Megspórolt összeg</span>
+              <strong id="totalSaved">0 Ft</strong>
+            </div>
+            <div class="summary-card">
+              <span>💸 Elköltött összeg</span>
+              <strong id="totalSpent">0 Ft</strong>
+            </div>
+            <div class="summary-card">
+              <span>🧮 Nettó különbség</span>
+              <strong id="totalNet">0 Ft</strong>
+            </div>
+          </div>
+          <div class="controls">
+            <input id="searchInput" type="search" placeholder="Keresés…" aria-label="Keresés" />
+            <select id="filterSelect" aria-label="Szűrés">
+              <option value="all">Összes</option>
+              <option value="saved">Csak spórolt</option>
+              <option value="spent">Csak megvett</option>
+            </select>
+            <select id="sortSelect" aria-label="Rendezés">
+              <option value="date_desc">Dátum ↓</option>
+              <option value="date_asc">Dátum ↑</option>
+              <option value="price_desc">Összeg ↓</option>
+              <option value="price_asc">Összeg ↑</option>
+              <option value="name_asc">Név A–Z</option>
+              <option value="name_desc">Név Z–A</option>
+            </select>
+          </div>
+          <ul id="resultsList" class="list" aria-live="polite"></ul>
+          <div class="row">
+            <button id="clearEntries" class="btn btn--ghost" type="button">Lista ürítése</button>
+            <button data-view="calc" class="btn btn--primary" type="button">Új tétel</button>
+          </div>
+        </section>
+
+        <section id="view-stats" class="view" role="tabpanel" aria-labelledby="tab-stats">
+          <header class="view__header">
+            <h2>Statisztika</h2>
+            <p class="muted">Időszakos bontásban láthatod a döntéseidet.</p>
+          </header>
+          <div id="statsContainer" class="stats"></div>
+          <p id="statsEmpty" class="muted center hidden">Még nincs elegendő adat a statisztikához.</p>
+        </section>
+
+        <section id="view-goals" class="view" role="tabpanel" aria-labelledby="tab-goals">
+          <header class="view__header">
+            <h2>Célok</h2>
+            <p class="muted">Állíts be havi keretet és hosszabb távú célt.</p>
+          </header>
+          <form id="goalsForm" class="form form--stack">
+            <div class="field">
+              <label for="monthlyCap">Havi költési keret (Ft)</label>
+              <input id="monthlyCap" name="monthlyCap" type="number" min="0" placeholder="pl. 100000" />
+            </div>
+            <div class="field">
+              <label for="savingGoal">Spórolási cél (Ft)</label>
+              <input id="savingGoal" name="savingGoal" type="number" min="0" placeholder="pl. 300000" />
+            </div>
+            <button type="submit" class="btn btn--primary">Célok mentése</button>
+            <button type="button" id="resetGoals" class="btn btn--ghost">Célok törlése</button>
+          </form>
+          <div class="progress">
+            <div class="progress__info">
+              <span>Spórolási cél teljesülése</span>
+              <strong id="goalProgressLabel">0%</strong>
+            </div>
+            <div class="progress__bar"><span id="goalProgressBar" style="width: 0%"></span></div>
+            <p id="goalStatus" class="muted"></p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="app__footer">© 2025 Munkaóra • Szia Lajos!</footer>
     </div>
     <textarea id="jsonArea" class="code" placeholder='Itt jelenik meg az exportált JSON, vagy ide illeszd be az importot'></textarea>
     <div class="modal-actions">
@@ -941,14 +1078,9 @@ const App={
     $("#profileIcon").textContent=(p.name[0]||"👤").toUpperCase();
   },
 
-  /* ---------- Shortcuts ---------- */
-  bindShortcuts(){
-    document.addEventListener("keydown",(e)=>{
-      if(e.key==="Escape"){ $("#profileModal").classList.add("hidden"); $("#settingsModal").classList.add("hidden"); }
-      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); if(this.state.view!=="results") this.setView("results"); $("#searchBox").focus(); }
-    });
-  }
-};
+    <div id="coach" class="coach" aria-live="polite"></div>
+    <div id="actionMessage" class="action-message hidden" role="status"></div>
+    <div id="toast" class="toast hidden" role="status"></div>
 
 const A2HS=(()=>{
   const sessionKey="a2hs-dismissed";
