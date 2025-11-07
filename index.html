@@ -1,29 +1,429 @@
+<!-- rebuild trigger 2025-11-05 -->
 <!DOCTYPE html>
 <html lang="hu">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b66ff" />
-    <link rel="manifest" href="manifest.webmanifest?v=clean-v1" />
-    <link rel="stylesheet" href="style.css?v=clean-v1" />
-    <title>Munkaóra — Szia Lajos!</title>
-  </head>
-  <body>
-    <div class="background"></div>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0b66ff" />
+<link rel="manifest" href="manifest.webmanifest" />
+<title>Munkaóra — Szia Lajos! 😏</title>
+<style>
+/* =======================================================================
+   THEME TOKENS
+   ======================================================================= */
+:root{
+  --bg-grad-1:#f7f9ff; --bg-grad-2:#eef2ff;
+  --card:#ffffff; --text:#111827; --muted:#6b7280; --line:#e7ecfb;
+  --blue:#0b66ff; --blue-2:#4b8dff; --green:#22c55e; --red:#ef4444; --yellow:#facc15; --violet:#8b5cf6; --orange:#fb923c;
+  --radius:20px; --shadow:0 12px 28px rgba(2,6,23,.08);
+  --pill:#eaf0ff; --overlay:rgba(0,0,0,.5);
+}
+html[data-theme="dark"]{
+  --bg-grad-1:#040711; --bg-grad-2:#0b1024;
+  --card:#101b38; --text:#f4f6ff; --muted:#b5c0eb; --line:#1e2a4a;
+  --blue:#4f8cff; --blue-2:#6ea2ff; --green:#2fdd82; --red:#ff5f7a; --yellow:#facc15; --violet:#8f8dff; --orange:#ffb16d;
+  --shadow:0 18px 46px rgba(0,0,0,.55);
+  --pill:#162a58; --overlay:rgba(3,6,15,.72);
+}
 
-    <section id="welcomeScreen" class="hero" aria-labelledby="welcomeTitle">
-      <div class="panel panel--welcome">
-        <span class="logo">⏰</span>
-        <h1 id="welcomeTitle">Munkaóra — Szia Lajos!</h1>
-        <p>
-          Számold ki, hány munkaórádba kerülnek a vágyaid, és hozz jobb döntéseket a
-          pénzügyeidről.
-        </p>
-        <button id="startBtn" class="btn btn--primary" type="button">Kezdjük! 🚀</button>
+/* =======================================================================
+   RESET + BASE
+   ======================================================================= */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  color:var(--text);
+  background:linear-gradient(180deg,var(--bg-grad-1),var(--bg-grad-2));
+  display:flex; justify-content:center; align-items:stretch;
+  position:relative; overflow-x:hidden;
+}
+body::before,
+body::after{
+  content:""; position:fixed; width:420px; height:420px; border-radius:50%;
+  background:radial-gradient(circle at center,var(--blue)33%,transparent 70%);
+  filter:blur(120px); opacity:.45; z-index:-1; pointer-events:none;
+  transition:transform .8s ease;
+}
+body::before{top:-220px; right:-160px;}
+body::after{bottom:-260px; left:-200px; background:radial-gradient(circle at center,var(--violet)30%,transparent 72%);}
+
+/* Layout wrapper */
+.container{width:100%;max-width:520px;padding:18px 14px 110px;position:relative;isolation:isolate;background:rgba(255,255,255,.28);backdrop-filter:blur(22px)}
+.container::before{
+  content:""; position:absolute; inset:0; border-radius:calc(var(--radius) + 16px);
+  background:linear-gradient(135deg,rgba(255,255,255,.65),rgba(234,240,255,.35));
+  box-shadow:0 18px 44px rgba(15,36,84,.18);
+  filter:blur(0); z-index:-1; opacity:.9;
+}
+
+/* Utils */
+.hidden{display:none !important}
+.center{text-align:center}
+.right{text-align:right}
+.bold{font-weight:900}
+.pill{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--pill),rgba(255,255,255,.65));color:var(--text);padding:3px 10px;border-radius:999px;font-weight:700;font-size:11px;box-shadow:0 6px 14px rgba(15,23,42,.08);backdrop-filter:blur(8px)}
+.small{font-size:12px;color:var(--muted)}
+.mt-6{margin-top:6px}
+.mt-10{margin-top:10px}
+.mt-12{margin-top:12px}
+.mt-16{margin-top:16px}
+.mt-20{margin-top:20px}
+.a2hs-pill{position:fixed;left:50%;bottom:24px;transform:translate(-50%,6px);display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:linear-gradient(135deg,var(--pill),rgba(255,255,255,.75));color:var(--text);box-shadow:0 16px 32px rgba(11,36,84,.18);backdrop-filter:blur(12px);z-index:1400;font-size:13px;font-weight:700;transition:opacity .25s ease,transform .25s ease;opacity:0;pointer-events:none}
+.a2hs-pill.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.a2hs-pill button{border:none;background:rgba(255,255,255,.85);color:var(--text);font-weight:800;border-radius:999px;padding:6px 12px;cursor:pointer;box-shadow:0 6px 18px rgba(11,36,84,.16);transition:transform .18s ease,box-shadow .18s ease}
+.a2hs-pill button:active{transform:scale(.97)}
+.a2hs-pill .close{background:transparent;color:var(--muted);box-shadow:none;padding:4px;font-size:14px}
+
+
+/* =======================================================================
+   WELCOME
+   ======================================================================= */
+#welcomeScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.welcome-logo{font-size:72px;margin-bottom:16px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.welcome-title{font-size:42px;font-weight:900;margin:0 0 12px;background:linear-gradient(135deg,var(--blue),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.welcome-subtitle{font-size:16px;color:var(--muted);margin:0 0 28px;line-height:1.6;max-width:320px}
+.welcome-btn{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;border:none;border-radius:20px;padding:16px 48px;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 18px 42px rgba(11,102,255,.32);transition:transform .2s,box-shadow .2s,filter .2s}
+.welcome-btn:hover{transform:translateY(-3px);box-shadow:0 22px 54px rgba(11,102,255,.42);filter:saturate(1.05)}
+.welcome-btn:active{transform:translateY(-1px)}
+
+/* =======================================================================
+   PROFILE SETUP
+   ======================================================================= */
+#profileSetupScreen h2{font-size:22px;margin:0 0 10px;text-align:center;color:var(--blue)}
+#profileSetupScreen p{color:var(--muted);text-align:center;margin:-4px 0 14px}
+
+/* =======================================================================
+   HEADER + NAV TABS (PROFILE ICON ONLY!)
+   ======================================================================= */
+.app-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.brand{display:flex;flex-direction:column}
+.brand h1{font-size:26px;font-weight:900;letter-spacing:-.01em;margin:0}
+.brand small{color:var(--muted);font-size:12px}
+.header-right{display:flex;align-items:center;gap:10px}
+.profile-icon{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(11,102,255,.28);transition:transform .18s}
+.profile-icon:hover{transform:translateY(-2px)}
+.switch{display:flex;align-items:center;gap:6px}
+.toggle{appearance:none;width:48px;height:26px;background:linear-gradient(135deg,#d4dcff77,#c7d2fe55);border-radius:999px;position:relative;cursor:pointer;outline:none;border:1px solid rgba(255,255,255,.35);transition:background .2s}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#ffffff,#f8fafc);box-shadow:0 6px 14px rgba(15,23,42,.18);transition:left .18s ease,box-shadow .2s ease}
+.toggle:checked{background:linear-gradient(135deg,var(--blue),var(--violet))}
+.toggle:checked::after{left:25px;box-shadow:0 6px 18px rgba(11,102,255,.4)}
+
+/* Tabs WITHOUT profile */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 12px}
+.tab{border:none;border-radius:13px;background:#eaf0ff66;color:var(--text);font-weight:800;font-size:13px;padding:10px 0;cursor:pointer;transition:transform .12s,box-shadow .2s,background .25s ease,color .25s ease}
+.tab:active{transform:scale(.98)}
+.tab.active{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;box-shadow:0 12px 28px rgba(11,102,255,.25)}
+
+/* =======================================================================
+   CARDS + FORM ELEMENTS
+   ======================================================================= */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 16px;margin-bottom:16px;position:relative;overflow:hidden}
+.card::before{
+  content:""; position:absolute; inset:-1px; border-radius:inherit;
+  border:1px solid rgba(255,255,255,.28); background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,0));
+  pointer-events:none; mix-blend-mode:soft-light;
+}
+h2{margin:0 0 10px;text-align:center;color:var(--blue);font-size:18px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select,textarea{width:100%;padding:12px 14px;border:1px solid color-mix(in srgb,var(--line) 80%,transparent);border-radius:14px;font-size:15px;background:rgba(255,255,255,.6);color:var(--text);transition:border .2s ease,box-shadow .2s ease,background .2s ease}
+input:focus,select:focus,textarea:focus{border-color:color-mix(in srgb,var(--blue) 80%,#fff 20%);outline:none;box-shadow:0 0 0 3px rgba(11,102,255,.15);background:#fff}
+.row{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;border:none;border-radius:14px;padding:13px 0;font-size:15px;font-weight:900;color:#fff;cursor:pointer;transition:opacity .12s,transform .12s,box-shadow .2s,filter .2s}
+.btn:hover{opacity:.95}
+.btn:active{transform:translateY(1px);filter:brightness(.95)}
+.btn-full{width:100%}
+.blue{background:linear-gradient(135deg,var(--blue),var(--blue-2))}
+.green{background:linear-gradient(135deg,#16a34a,var(--green))}
+.red{background:linear-gradient(135deg,#f87171,var(--red))}
+.yellow{background:linear-gradient(135deg,#fde047,var(--yellow));color:#111}
+.gray{background:linear-gradient(135deg,#f3f4f6,#e5e7eb);color:#111}
+
+/* Calculator result + coach bubble */
+.result{background:linear-gradient(135deg,rgba(76,106,255,.12),rgba(143,109,255,.14));border:1px solid rgba(108,130,255,.3);color:#0b2a66;border-radius:14px;padding:12px 14px;font-weight:800;text-align:center;box-shadow:0 10px 24px rgba(15,36,84,.1)}
+.bubble{position:fixed;right:12px;bottom:80px;max-width:280px;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;padding:14px 16px;border-radius:18px;box-shadow:0 18px 44px rgba(0,0,0,.38);font-size:13px;z-index:1200;opacity:0;transform:translateY(14px) scale(.98);transition:opacity .25s,transform .3s cubic-bezier(.22,1,.36,1)}
+.bubble.show{opacity:1;transform:translateY(0)}
+
+/* =======================================================================
+   MOBILE FIRST TWEAKS & MOTION PREFERENCES
+   ======================================================================= */
+@media (max-width:600px){
+  .container{padding:16px 12px 96px}
+  .app-header{padding:4px 0}
+  .brand h1{font-size:24px}
+  .tabs{gap:8px}
+  .card{padding:16px 14px}
+  .row{flex-direction:column}
+  .controls{grid-template-columns:1fr;gap:10px}
+  .bubble{right:10px;left:10px;max-width:none}
+}
+@media (max-width:420px){
+  .welcome-title{font-size:36px}
+  .welcome-subtitle{font-size:15px}
+  .welcome-btn{width:100%;padding:16px 0;font-size:17px}
+  .app-header{flex-direction:column;align-items:flex-start;gap:12px}
+  .tabs{grid-template-columns:repeat(2,1fr)}
+  .tab{font-size:14px;padding:12px 0}
+  .card{border-radius:18px}
+  input,select,textarea{font-size:16px}
+}
+@media (max-width:360px){
+  body::before,body::after{transform:scale(.8)}
+  .welcome-title{font-size:32px}
+  .pill{font-size:10px}
+  .profile-icon{width:36px;height:36px;font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition:none !important;scroll-behavior:auto !important}
+  body::before,body::after{display:none}
+}
+
+/* Results list */
+.controls{display:grid;grid-template-columns:1fr 120px 120px;gap:8px;margin-bottom:10px}
+@media(max-width:420px){.controls{grid-template-columns:1fr 1fr}.controls .only-wide{grid-column:1/-1}}
+.list{list-style:none;margin:6px 0 0;padding:0}
+.item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.meta{display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;border-radius:999px;padding:3px 8px;font-weight:800}
+.b-green{background:#dffbe7;color:#0f5f32}.b-red{background:#ffe4e4;color:#8f1d1d}
+.price{white-space:nowrap;font-weight:800}
+.actions{display:flex;gap:6px}
+.icon-btn{border:none;background:#eef2ff;color:#0b2a66;border-radius:10px;padding:8px;cursor:pointer}
+.icon-btn.danger{background:#ffe5e5;color:#7d1b1b}
+.icon-btn.secondary{background:#eaf9ef;color:#124d2a}
+html[data-theme="dark"] .item{border-bottom:1px solid rgba(64,86,132,.6)}
+html[data-theme="dark"] .badge{background:rgba(50,70,120,.45);color:var(--text)}
+html[data-theme="dark"] .b-green{background:rgba(32,138,92,.28);color:#a3f7d1}
+html[data-theme="dark"] .b-red{background:rgba(180,60,90,.3);color:#ffc5d0}
+html[data-theme="dark"] .icon-btn{background:rgba(32,46,86,.82);color:#dde6ff;box-shadow:0 10px 24px rgba(0,0,0,.45)}
+html[data-theme="dark"] .icon-btn.danger{background:rgba(96,32,60,.8);color:#ff97af}
+html[data-theme="dark"] .icon-btn.secondary{background:rgba(26,78,60,.78);color:#96f5c9}
+
+/* Undo snackbar */
+.snack{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#101828;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;z-index:1300}
+.snack button{background:#fff;color:#111;border:none;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer}
+.funny-threat{margin:18px auto 0;max-width:360px;padding:10px 16px;border-radius:14px;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid color-mix(in srgb,var(--line) 65%,transparent);box-shadow:0 12px 30px rgba(15,36,84,.08);font-size:12px;line-height:1.5;color:var(--muted);text-align:center;opacity:0;transform:translateY(6px);transition:opacity .28s ease,transform .28s ease;pointer-events:none}
+.funny-threat.show{opacity:1;transform:translateY(0)}
+
+/* Stats */
+.stat-legend{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 10px}
+.dot{width:12px;height:12px;border-radius:50%}
+.dot.green{background:var(--green)} .dot.red{background:var(--red)}
+canvas{width:100%;height:auto;border-radius:12px;background:#ffffff08}
+html[data-theme="dark"] canvas{background:rgba(12,20,44,.86);border:1px solid rgba(82,106,168,.4);box-shadow:0 16px 36px rgba(0,0,0,.55)}
+
+/* Goals */
+.progress{height:12px;background:#e8ecff;border-radius:999px;overflow:hidden}
+.progress .bar{height:100%;background:linear-gradient(135deg,var(--green),#66e3a0);width:0%}
+html[data-theme="dark"] .progress{background:rgba(34,52,96,.66)}
+html[data-theme="dark"] .progress .bar{background:linear-gradient(135deg,#29e88f,#59f2b0)}
+
+/* Modals */
+.modal{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;z-index:1500;padding:16px}
+.modal-content{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:16px;max-width:540px;width:100%}
+.modal-actions{display:flex;gap:8px;margin-top:10px}
+textarea.code{height:160px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+
+/* Footer */
+footer{color:var(--muted);text-align:center;font-size:12px;margin-top:8px}
+
+/* Tiny helpers for long screens */
+.sep{height:8px}
+</style>
+</head>
+<body>
+
+<!-- ==============================================================
+     WELCOME
+     ============================================================== -->
+<div id="welcomeScreen" class="container" aria-live="polite">
+  <div class="welcome-logo">⏰</div>
+  <h1 class="welcome-title">Munkaóra</h1>
+  <p class="welcome-subtitle">Tudd meg, hány munkaórádba kerülnek a dolgok, és hozz okosabb döntéseket!<br>
+    <span class="pill">+ Szia Lajos! 😏</span>
+  </p>
+  <button class="welcome-btn" id="startBtn" aria-label="Kezdjük">Kezdjük! 🚀</button>
+</div>
+
+<!-- ==============================================================
+     PROFILE SETUP (kötelező)
+     ============================================================== -->
+<div id="profileSetupScreen" class="container hidden">
+  <div class="card">
+    <h2>Állítsd be a profilod</h2>
+    <p>Az első számításhoz ezek kellenek.</p>
+    <label for="setupName">Becenév</label>
+    <input id="setupName" type="text" placeholder="Add meg a beceneved" />
+    <label for="setupAge">Kor</label>
+    <input id="setupAge" type="number" min="1" placeholder="Add meg a korod" />
+    <label for="setupSalary">Nettó havi fizetés (Ft)</label>
+    <input id="setupSalary" type="number" min="1" placeholder="pl. 450000" />
+    <label for="setupHours">Heti munkaórák</label>
+    <input id="setupHours" type="number" min="1" placeholder="pl. 40" />
+    <div class="row">
+      <button class="btn blue" id="saveSetupProfile">Folytatás →</button>
+      <button class="btn gray" id="backToWelcome">Vissza</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================================================
+     APP
+     ============================================================== -->
+<div id="appScreen" class="container hidden" aria-live="polite">
+  <div class="app-header">
+    <div class="brand">
+      <h1>Munkaóra</h1>
+      <small>Tudd, hány órát dolgozol a vágyaidért.</small>
+    </div>
+    <div class="header-right">
+      <div class="theme-switch" role="group" aria-label="Téma váltása">
+        <span class="theme-label" data-theme="light" role="button" aria-pressed="false" tabindex="0">🌞 Világos</span>
+        <input id="themeToggle" class="toggle" type="checkbox" role="switch" aria-label="Sötét mód kapcsoló" aria-checked="false" />
+        <span class="theme-label" data-theme="dark" role="button" aria-pressed="false" tabindex="0">🌙 Sötét</span>
       </div>
-    </section>
+      <div class="profile-icon" id="profileIcon" title="Profil">👤</div>
+    </div>
+  </div>
 
-    <main id="appScreen" class="app hidden" role="main">
+  <!-- NINCS profil tab! -->
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-view="calc" role="tab" aria-selected="true">Kalkulátor</button>
+    <button class="tab" data-view="results" role="tab">Eredmények</button>
+    <button class="tab" data-view="stats" role="tab">Statisztika</button>
+    <button class="tab" data-view="goals" role="tab">Célok</button>
+  </nav>
+
+  <!-- ======================= CALCULATOR ======================= -->
+  <section id="view-calc" class="card" role="region" aria-label="Kalkulátor">
+    <h2>Kalkulátor</h2>
+    <p class="center" id="hello">Szia! Kezdjük egy tétellel.</p>
+    <label for="productName">Termék neve</label>
+    <input id="productName" type="text" placeholder="pl. AirPods Pro" />
+    <label for="productPrice">Termék ára (Ft)</label>
+    <input id="productPrice" type="number" min="1" placeholder="pl. 79990" />
+    <button class="btn yellow btn-full" id="calculateBtn">Kiszámolom</button>
+
+    <div id="calcResult" class="hidden mt-12">
+      <p class="result" id="workHoursText"></p>
+      <p class="center small" id="hourlyHint"></p>
+      <div class="row calc-actions">
+        <button class="btn green" id="saveBtn">Megspórolom 💚</button>
+        <button class="btn red" id="buyBtn">Megveszem 💸</button>
+      </div>
+      <p class="small mt-6 center">A mentéshez válaszd ki, hogy spórolod vagy megveszed.</p>
+    </div>
+  </section>
+
+  <!-- ======================= RESULTS ======================= -->
+  <section id="view-results" class="card hidden" role="region" aria-label="Eredmények">
+    <h2>Eredmények</h2>
+    <div class="sum mt-6">
+      <div><span>💚 Megspórolt összeg</span><b id="totalSaved">0 Ft</b></div>
+      <div><span>💸 Elköltött összeg</span><b id="totalSpent">0 Ft</b></div>
+      <div><span class="muted">🧮 Nettó</span><b id="net">0 Ft</b></div>
+    </div>
+
+    <div class="controls mt-12">
+      <input id="searchBox" type="search" placeholder="Keresés név szerint…" aria-label="Keresés" />
+      <select id="filterSelect" class="only-wide" aria-label="Szűrés">
+        <option value="all">Összes</option>
+        <option value="saved">Csak spórolt</option>
+        <option value="spent">Csak megvett</option>
+      </select>
+      <select id="sortSelect" class="only-wide" aria-label="Rendezés">
+        <option value="date_desc">Dátum ↓</option>
+        <option value="date_asc">Dátum ↑</option>
+        <option value="price_desc">Összeg ↓</option>
+        <option value="price_asc">Összeg ↑</option>
+        <option value="name_asc">Név A–Z</option>
+        <option value="name_desc">Név Z–A</option>
+      </select>
+    </div>
+
+    <ul class="list" id="itemList"></ul>
+
+    <div class="row mt-12">
+      <button class="btn gray" id="clearAll">Lista ürítése</button>
+      <button class="btn blue" data-view="calc">Új tétel</button>
+    </div>
+  </section>
+
+  <!-- ======================= STATS ======================= -->
+  <section id="view-stats" class="card hidden" role="region" aria-label="Statisztika">
+    <h2>Statisztika</h2>
+    <div class="stat-legend">
+      <span class="dot green"></span><span class="small">Megspórolt</span>
+      <span class="dot red"></span><span class="small">Megvett</span>
+    </div>
+    <canvas id="statsCanvas" width="680" height="360"></canvas>
+    <p class="center small mt-10">Havi bontás + mozgóátlag (Ft)</p>
+  </section>
+
+  <!-- ======================= GOALS ======================= -->
+  <section id="view-goals" class="card hidden" role="region" aria-label="Célok">
+    <h2>Célok</h2>
+    <label for="monthlyCap">Havi költési keret (Ft)</label>
+    <input id="monthlyCap" type="number" min="0" placeholder="pl. 100000" />
+    <label for="savingGoal">Spórolási cél (Ft)</label>
+    <input id="savingGoal" type="number" min="0" placeholder="pl. 300000" />
+    <div class="row">
+      <button class="btn blue" id="saveGoals">Célok mentése</button>
+      <button class="btn gray" id="resetGoals">Célok törlése</button>
+    </div>
+    <div class="mt-12">
+      <div class="center small mt-6"><b>Spórolási cél teljesülése</b> — <span id="goalProgressLabel">0%</span></div>
+      <div class="progress mt-10"><div class="bar" id="goalProgressBar" style="width:0%"></div></div>
+    </div>
+  </section>
+
+  <div id="funnyThreat" class="funny-threat" role="status" aria-live="polite"></div>
+  <div id="a2hsPill" class="a2hs-pill" role="dialog" aria-live="polite" aria-label="Add hozzá a Munkaóra appot">
+    <span>Hozzáadnád a Munkaóra appot a kezdőképernyődhöz?</span>
+    <button id="a2hsAction" type="button">Telepítés</button>
+    <button id="a2hsClose" class="close" type="button" aria-label="Bezárás">✕</button>
+  </div>
+
+  <footer class="mt-16">© 2025 Munkaóra • Szia Lajos! 😏</footer>
+
+  <div id="coach" class="bubble" role="status" aria-live="polite"></div>
+  <div id="snack" class="snack hidden"></div>
+</div>
+
+    <div id="profileModal" class="modal hidden" role="dialog" aria-labelledby="profileTitle">
+      <div class="modal__backdrop" data-close="profile"></div>
+      <section class="panel panel--modal">
+        <header class="modal__header">
+          <h2 id="profileTitle">Profil beállítása</h2>
+          <button class="icon-button" type="button" data-close="profile" aria-label="Bezárás">✕</button>
+        </header>
+        <form id="profileForm" class="form">
+          <div class="field">
+            <label for="profileName">Becenév</label>
+            <input id="profileName" name="name" type="text" required placeholder="pl. Lajos" />
+          </div>
+          <div class="field">
+            <label for="profileAge">Életkor</label>
+            <input id="profileAge" name="age" type="number" min="1" required placeholder="pl. 28" />
+          </div>
+          <div class="field">
+            <label for="profileSalary">Nettó havi fizetés (Ft)</label>
+            <input id="profileSalary" name="salary" type="number" min="1" required placeholder="pl. 450000" />
+          </div>
+          <div class="field">
+            <label for="profileHours">Heti munkaórák száma</label>
+            <input id="profileHours" name="hours" type="number" min="1" required placeholder="pl. 40" />
+          </div>
+          <footer class="modal__footer">
+            <button type="submit" class="btn btn--primary">Mentés</button>
+            <button type="button" id="profileReset" class="btn btn--ghost">Adatok törlése</button>
+          </footer>
+        </form>
+      </section>
+    </div>
+
+    <div id="appShell" class="app hidden">
       <header class="app__header">
         <div class="brand">
           <span class="brand__logo">⏰</span>
@@ -33,41 +433,27 @@
           </div>
         </div>
         <div class="app__actions">
+          <div class="theme-switch" aria-label="Téma kapcsoló" role="group">
+            <span class="theme-switch__label" aria-hidden="true">🌞 Világos</span>
+            <label class="theme-switch__control" for="themeToggle">
+              <input type="checkbox" id="themeToggle" role="switch" aria-label="Téma váltása" />
+              <span class="theme-switch__track"></span>
+            </label>
+            <span class="theme-switch__label" aria-hidden="true">🌙 Sötét</span>
+          </div>
           <button id="profileButton" class="icon-button" type="button" aria-label="Profil megnyitása">👤</button>
         </div>
       </header>
 
       <nav class="tabbar" role="tablist">
-        <button
-          class="tab active"
-          id="tab-calc"
-          data-tab="calc"
-          role="tab"
-          aria-controls="view-calc"
-          aria-selected="true"
-          type="button"
-        >
-          Kalkulátor
-        </button>
-        <button class="tab" id="tab-results" data-tab="results" role="tab" aria-controls="view-results" type="button">
-          Eredmények
-        </button>
-        <button class="tab" id="tab-stats" data-tab="stats" role="tab" aria-controls="view-stats" type="button">
-          Statisztika
-        </button>
-        <button class="tab" id="tab-goals" data-tab="goals" role="tab" aria-controls="view-goals" type="button">
-          Célok
-        </button>
+        <button class="tab active" data-view="calc" role="tab" aria-selected="true">Kalkulátor</button>
+        <button class="tab" data-view="results" role="tab">Eredmények</button>
+        <button class="tab" data-view="stats" role="tab">Statisztika</button>
+        <button class="tab" data-view="goals" role="tab">Célok</button>
       </nav>
 
-      <div class="views">
-        <section
-          id="view-calc"
-          class="view active"
-          data-tabview="calc"
-          role="tabpanel"
-          aria-labelledby="tab-calc"
-        >
+      <main class="views">
+        <section id="view-calc" class="view active" role="tabpanel" aria-labelledby="tab-calc">
           <header class="view__header">
             <h2>Kalkulátor</h2>
             <p class="muted" id="welcomeHint">Szia! Kezdjük egy új tétellel.</p>
@@ -94,13 +480,7 @@
           </div>
         </section>
 
-        <section
-          id="view-results"
-          class="view"
-          data-tabview="results"
-          role="tabpanel"
-          aria-labelledby="tab-results"
-        >
+        <section id="view-results" class="view" role="tabpanel" aria-labelledby="tab-results">
           <header class="view__header">
             <h2>Eredmények</h2>
             <p class="muted">Összesített döntéseid és listáid.</p>
@@ -138,100 +518,629 @@
           <ul id="resultsList" class="list" aria-live="polite"></ul>
           <div class="row">
             <button id="clearEntries" class="btn btn--ghost" type="button">Lista ürítése</button>
-            <button data-tab-target="calc" class="btn btn--primary" type="button">Új tétel</button>
+            <button data-view="calc" class="btn btn--primary" type="button">Új tétel</button>
           </div>
         </section>
 
-        <section
-          id="view-stats"
-          class="view"
-          data-tabview="stats"
-          role="tabpanel"
-          aria-labelledby="tab-stats"
-        >
+        <section id="view-stats" class="view" role="tabpanel" aria-labelledby="tab-stats">
           <header class="view__header">
             <h2>Statisztika</h2>
             <p class="muted">Időszakos bontásban láthatod a döntéseidet.</p>
           </header>
-          <div id="statsContent" class="stats"></div>
+          <div id="statsContainer" class="stats"></div>
           <p id="statsEmpty" class="muted center hidden">Még nincs elegendő adat a statisztikához.</p>
         </section>
 
-        <section
-          id="view-goals"
-          class="view"
-          data-tabview="goals"
-          role="tabpanel"
-          aria-labelledby="tab-goals"
-        >
+        <section id="view-goals" class="view" role="tabpanel" aria-labelledby="tab-goals">
           <header class="view__header">
             <h2>Célok</h2>
             <p class="muted">Állíts be havi keretet és hosszabb távú célt.</p>
           </header>
-          <form id="goalForm" class="form">
+          <form id="goalsForm" class="form form--stack">
             <div class="field">
-              <label for="monthlyCap">Havi költségkeret (Ft)</label>
-              <input id="monthlyCap" name="monthlyCap" type="number" min="0" placeholder="pl. 200000" />
+              <label for="monthlyCap">Havi költési keret (Ft)</label>
+              <input id="monthlyCap" name="monthlyCap" type="number" min="0" placeholder="pl. 100000" />
             </div>
             <div class="field">
               <label for="savingGoal">Spórolási cél (Ft)</label>
-              <input id="savingGoal" name="savingGoal" type="number" min="0" placeholder="pl. 500000" />
+              <input id="savingGoal" name="savingGoal" type="number" min="0" placeholder="pl. 300000" />
             </div>
-            <div class="row">
-              <button type="submit" class="btn btn--primary">Cél mentése</button>
-              <button id="resetGoals" type="button" class="btn btn--ghost">Visszaállítás</button>
-            </div>
+            <button type="submit" class="btn btn--primary">Célok mentése</button>
+            <button type="button" id="resetGoals" class="btn btn--ghost">Célok törlése</button>
           </form>
-          <div class="goal-progress">
-            <div class="progress">
-              <div class="progress__bar">
-                <span id="goalProgress" style="width: 0%"></span>
-              </div>
+          <div class="progress">
+            <div class="progress__info">
+              <span>Spórolási cél teljesülése</span>
+              <strong id="goalProgressLabel">0%</strong>
             </div>
+            <div class="progress__bar"><span id="goalProgressBar" style="width: 0%"></span></div>
             <p id="goalStatus" class="muted"></p>
           </div>
         </section>
-      </div>
+      </main>
 
       <footer class="app__footer">© 2025 Munkaóra • Szia Lajos!</footer>
-    </main>
-
-    <div id="profileModal" class="modal hidden" role="dialog" aria-labelledby="profileTitle">
-      <div class="modal__backdrop" data-close="profile"></div>
-      <section class="panel panel--modal">
-        <header class="modal__header">
-          <h2 id="profileTitle">Profil beállítása</h2>
-          <button class="icon-button" type="button" data-close="profile" aria-label="Bezárás">✕</button>
-        </header>
-        <form id="profileForm" class="form">
-          <div class="field">
-            <label for="profileName">Becenév</label>
-            <input id="profileName" name="name" type="text" required placeholder="pl. Lajos" />
-          </div>
-          <div class="field">
-            <label for="profileAge">Életkor</label>
-            <input id="profileAge" name="age" type="number" min="1" required placeholder="pl. 28" />
-          </div>
-          <div class="field">
-            <label for="profileSalary">Nettó havi fizetés (Ft)</label>
-            <input id="profileSalary" name="salary" type="number" min="1" required placeholder="pl. 450000" />
-          </div>
-          <div class="field">
-            <label for="profileHours">Heti munkaórák száma</label>
-            <input id="profileHours" name="hours" type="number" min="1" required placeholder="pl. 40" />
-          </div>
-          <footer class="modal__footer">
-            <button type="submit" class="btn btn--primary">Mentés</button>
-            <button type="button" id="profileReset" class="btn btn--ghost">Adatok törlése</button>
-          </footer>
-        </form>
-      </section>
     </div>
+    <textarea id="jsonArea" class="code" placeholder='Itt jelenik meg az exportált JSON, vagy ide illeszd be az importot'></textarea>
+    <div class="modal-actions">
+      <button class="btn gray" id="closeSettings">Bezár</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =======================================================================
+   TINY HELPERS
+   ======================================================================= */
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const esc=s=>(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+const fmtFt=v=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(Number(v||0));
+const now=()=>Date.now();
+const MONTHS=["01","02","03","04","05","06","07","08","09","10","11","12"];
+
+/* =======================================================================
+   DATA LAYER + MIGRATION
+   ======================================================================= */
+const schemaVersion=2;
+const Data={
+  get:(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},
+  del:(k)=>localStorage.removeItem(k),
+  migrate(){
+    const v=Data.get("__schema")||1;
+    if(v<2){
+      ["saved","spent"].forEach(key=>{
+        const arr=Data.get(key)||[];
+        arr.forEach(it=>{
+          if(!it.at) it.at=now();
+          if(it.name && typeof it.name!=="string") it.name=String(it.name);
+          if(!it.type) it.type=key;
+          if(typeof it.price!=="number") it.price=Number(it.price)||0;
+          if(typeof it.hours!=="number") it.hours=Number(it.hours)||0;
+        });
+        Data.set(key,arr);
+      });
+      Data.set("__schema",2);
+    }
+  }
+};
+
+const API={
+  profile:()=>Data.get("profile"),
+  saveProfile:(p)=>Data.set("profile",p),
+  deleteProfile:()=>{["profile","saved","spent","goals"].forEach(Data.del)},
+  list:(type)=>{
+    const list=Data.get(type)||[];
+    return list.map(it=>({...it,type:it.type||type}));
+  },
+  add:(type,item)=>{
+    const list=Data.get(type)||[];
+    const normalized={
+      name:item.name||"",
+      price:Number(item.price)||0,
+      hours:Number(item.hours)||0,
+      at:now(),
+      type
+    };
+    list.unshift(normalized);
+    Data.set(type,list);
+  },
+  setList:(type,list)=>{
+    const normalized=list.map(it=>({
+      ...it,
+      type:it.type||type,
+      price:Number(it.price)||0,
+      hours:Number(it.hours)||0
+    }));
+    Data.set(type,normalized);
+  },
+  clearLists:()=>{Data.set("saved",[]);Data.set("spent",[])},
+  theme:()=>{
+    const savedTheme=localStorage.getItem("theme");
+    if(savedTheme==="dark"||savedTheme==="light") return savedTheme;
+    if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+    return "light";
+  },
+  setTheme:(t)=>{
+    const next=t==="dark"?"dark":"light";
+    localStorage.setItem("theme",next);
+    return next;
+  },
+  goals:()=>Data.get("goals")||{monthlyCap:0,savingGoal:0},
+  saveGoals:(g)=>Data.set("goals",g),
+  exportAll:()=>({__schema:schemaVersion,profile:API.profile(),saved:API.list("saved"),spent:API.list("spent"),goals:API.goals()}),
+  importAll:(obj)=>{
+    if(!obj||typeof obj!=="object") throw new Error("Érvénytelen JSON");
+    if(obj.__schema && obj.__schema>schemaVersion) throw new Error("Újabb sémájú adat – frissítsd az appot!");
+    if(obj.profile) Data.set("profile",obj.profile);
+    if(Array.isArray(obj.saved)) Data.set("saved",obj.saved);
+    if(Array.isArray(obj.spent)) Data.set("spent",obj.spent);
+    if(obj.goals) Data.set("goals",obj.goals);
+    if(obj.theme) API.setTheme(obj.theme);
+    Data.set("__schema",schemaVersion);
+  }
+};
+
+/* =======================================================================
+   COACH BUBBLE CONTEXTUAL MESSAGES
+   ======================================================================= */
+const COACH_CONTEXTS={
+  startup:[
+    "Szia Lajos! Nézzük, mennyi időt dolgoztál a vágyaidért. ⏳",
+    "Üdv újra, Lajos! Készen állsz egy kis pénzügyi matekra? 📈",
+    "Szia Lajos! Mutasd, mire gyűjtöttél mostanában. 💼"
+  ],
+  save:[
+    "Szépen spórolsz, Lajos! 💰",
+    "Ez igen, újabb munkaóra megmentve! 🙌",
+    "Szuper döntés, Lajos – így épül a tartalék. 🛡️",
+    "Most tényleg közelebb kerültél a célodhoz! 🏁"
+  ],
+  spend:[
+    "Hát ez most elment, de legalább hasznos volt. 😉",
+    "Megérte? Gondold át legközelebb! 💸",
+    "Egy kis öröm most, több munkaórád ment el. ⏱️",
+    "Oké, Lajos, de holnap spórolós nap jön! 😅"
+  ],
+  results:[
+    "Itt az eredmény, Lajos! 📊",
+    "Nézd meg, mennyit haladtál! 🚀",
+    "A számok nem hazudnak – ez a mérleged most. ⚖️",
+    "Ez a teljesítményed összefoglalva. 📘"
+  ]
+};
+
+/* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
+   ======================================================================= */
+const COACH=[
+"Ejnye, ezért most sokat fogsz dolgozni. 😬","A pénztárcád halk sírást hallatott. 💸","A jövőbeli éned most csóválja a fejét.",
+"Ha boldoggá tesz, oké – de sok órádba kerül.","Ez már a 'drága, de kell' kategória? 🤨","A bankszámlád szabadságra ment.",
+"10 órán túl? A jövőbeli Lajos felhívna. 🫨","Legközelebb írd be: 'gondolkozzak még'.","A racionalitás most ebédel. 🍽️","Legalább szép lesz. Reméljük.",
+"Ez egy hosszú műszak ára. ⏳","Instant dopamin, tartós mínusz. ⚡️","A lelkiismereted most offline.","Kávé helyett most dolgozol érte még párat.",
+"Nem muszáj, de megtetted. 😅","A matek nem tapsol most. 🧮","Ezen most a pénzügyi coach felszisszent.","Oké, de használd is naponta!",
+"A józan ész most AFK. 📴","Ha meghoznád újra ezt a döntést? Biztos?","Egy tétel, két sóhaj. 😮‍💨","Ez a 'szív döntött' vásárlás.",
+"Minimum egy hétvége ment rá.","Nem rossz, csak… drága.","Ha akciós volt, kicsit kevésbé fáj.","A 'majd visszateszem' gomb letiltva? 😏",
+"Ezt a döntést screenshotolom a tanmeséhez. 📸","Kis lépés a tárgy felé, nagy lépés a mínuszba.","Érzed azt a kis bökést? Az a bankkártya. 💳",
+"Na… legalább sztori lesz. 📖","A spórolás most szünetel. 🧘","Ha ezt megspóroltad volna…","Ez már 'luxus-szagú' döntés. 💎",
+"A jövő heti ebéded integet. 🍝","10+ óra? Ez már szerelem.","Tudod, hogy ezért túlórázol majd?","A költségvetésed most kér egy ölelést.",
+"Ez a vásárlás beszélgetést érdemel.","A mérleg: öröm + bűntudat = egyenleg?","Az ész helyett a szem döntött. 👀","Valaki most nagyon boldog (a kereskedő).",
+"Reméljük legalább tartós.","Ha ez motivál a munkára – rendben. 💪","Pénzügyi edzés: ma farizom + pénztárca.","Ezt a 'szükséges' szót feszegetjük.",
+"A spórolásod most levegőt vesz.","Kedves, de költséges.","A 'csak megnézem' után ez lett. 🛒","Én szóltam volna… ha kérdezel. 😉",
+"Egy tárgy, sok óra. Jó csere?","A fej számol, a szív vásárol.","Ha ezt bérben mérnénk, sok lenne.","Majd amikor jön a rezsi, emlékezz. 🧾",
+"Ez már 'felnőtt döntés' – ára van.","A bankod is látta ezt, ugye? 👀","Ha ez örömöt hoz, oké – de sokba került.","Instant jó érzés, késleltetett fájás.",
+"Nem baj, tanulópénz. Drága tanulópénz.","Pénzügyi sóhaj: *hosszan*. 😮‍💨","Ha ezt eladnád később… kérdéses.","Ez már 'jó, de muszáj volt?' kategória.",
+"Következőre írj listát. 📝","A határidők is integetnek most. ⏰","A spórolásod megbicsaklott.","A pénzed kicsit elszaladt kávézni. ☕",
+"Egy 'majd legközelebb' gomb hiányzott.","Ezt a döntést a jövőbeli te értékelni fogja? 🤔","Tarts egy 24 órás szabályt legközelebb.",
+"Most már legalább motivált vagy dolgozni. 😅","A költségvetésed kér egy meetinget. 📊","Ez kérem préselt munkaórákból készült. 🔧",
+"A hitelkártyád halkan remeg.","Ez az élmény reméljük nem múló.","Ha ezt egyszerűen 'kellett' – jó van.","Az ész: 'nem', a vágy: 'igen'.",
+"A pénzügyi határ most kicsit csúszott.","A 'spórolom' gomb is ott volt ám.","Kicsit több lett, mint 'apró'.","Legalább kipipálhatsz valamit a listán.",
+"Gondold át: 10+ óra = ez a tárgy.","A kompromisszumok drágák.","A minimalizmus most elfordult. 🧘‍♂️","Na jól van, de most spórolós hét jön!",
+"A pénzügyi én-ed most sír.","Ha ez hobbi: oké. Ha hóbort: kétszer gondold át.","A 'miért' erősebb volt, mint a 'mennyi'.",
+"Egy kis bűntudat, egy nagy doboz. 📦","Közelebb kerültél hozzá – a bankszámla távolabb.","Az ár-érték arány most vitatott.",
+"Ez a 'megérdemlem' pillanat?","Jutalomvásárlás? Akkor hajrá – ritkán.","A türelem gyakran olcsóbb. ⏳","A 'most azonnal kell' a legdrágább.",
+"Ha a munkád boldoggá tesz – megdolgoztál érte.","A jövőbeli számlák nem felejtenek.","A keret csipogott. 📉","A döntés megvan – most használd is, sokat!",
+"Minimum 10 óra – maximum öröm?","Ha ez inspirál: nyertél. Ha nem: tanultál.","Oké, de a következő legyen 'Megspórolom'.",
+"A bankod eddig bírta nevetés nélkül. 😬","Minden rendben – csak most kicsit drága lett.","A spórolásod most visszaszámol.",
+"Ezt még a józan eszed is megkérdezné: kellett?","Zárjuk le: használd egészséggel, okosan. ✅"
+];
+
+/* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
+   ======================================================================= */
+const positiveMessages=[
+  "Szia Lajos, most épp egy lépéssel közelebb vagy a szabadsághoz.",
+  "Okos döntés, Lajos – még pár ilyen, és lesz nyaralásod is.",
+  "Spórolni nem menő, csak hasznos – és te most hasznos vagy.",
+  "A jövőbeli Lajos koccint rád egy ásványvízzel.",
+  "A bankszámlád hálás, még ha nem is tud beszélni.",
+  "Na látod, működik az önuralom, nem csak legenda.",
+  "Lassan, de biztosan, Lajos – a türelem forintot terem.",
+  "Egy kicsit most gazdagabb vagy, még ha csak lélekben is.",
+  "Szia Lajos, ez volt a felnőtt élet első jele.",
+  "Ha minden nap így döntesz, egyszer te leszel a motivációs poszt."
+];
+
+const negativeMessages=[
+  "Megvetted? Szép. A pénztárcád sír, de legalább te boldog vagy.",
+  "Szia Lajos, most megint eladtad a jövőd egy kávéért.",
+  "Gratulálok, a célod most épp hátrébb lépett kettőt.",
+  "Nem baj, legalább gazdagabb lettél tapasztalatban.",
+  "A spórolás várhat – mondta még senki, aki elérte a célját.",
+  "Lajos, a költekezés öröm – rövid távon.",
+  "Még egy ilyen döntés, és a célod már csak mese lesz.",
+  "Ha a pénz beszél, most épp azt mondta: viszlát.",
+  "Jó választás lenne… egy másik univerzumban.",
+  "Szia Lajos, a jövőbeli éned most épp kikapcsolta a Wi-Fit, hogy ne lássa ezt."
+];
+
+/* =======================================================================
+   UI HELPERS
+   ======================================================================= */
+const UI={
+  snackTimer:null,
+  coachTimer:null,
+  setTheme(theme){document.documentElement.setAttribute("data-theme",theme);$("#themeToggle").checked=(theme==="dark");API.setTheme(theme)},
+  snack(msg,withUndo,undoFn){
+    const s=$("#snack");
+    if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
+    s.classList.remove("hidden"); s.innerHTML="";
+    const t=document.createElement("span"); t.textContent=msg; s.appendChild(t);
+    if(withUndo){
+      const b=document.createElement("button");
+      b.textContent="Visszavonás";
+      b.addEventListener("click",()=>{
+        if(undoFn) undoFn();
+        s.classList.add("hidden");
+        if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
+      });
+      s.appendChild(b);
+    }
+    this.snackTimer=setTimeout(()=>{
+      s.classList.add("hidden");
+      this.snackTimer=null;
+    },3500);
+  },
+  coach(text){
+    const b=$("#coach");
+    if(this.coachTimer){clearTimeout(this.coachTimer); this.coachTimer=null;}
+    b.textContent="Apádhelyett Anyád: "+text;
+    b.classList.add("show");
+    this.coachTimer=setTimeout(()=>{
+      b.classList.remove("show");
+      this.coachTimer=null;
+    },2400);
+  }
+};
+
+/* =======================================================================
+   APP
+   ======================================================================= */
+const App={
+  state:{view:"calc",search:"",filter:"all",sort:"date_desc",lastAction:null},
+  init(){
+    Data.migrate();
+    this.bindWelcome();
+    this.bindProfileSetup();
+    this.bindTabs();
+    this.bindCalculator();
+    this.bindResults();
+    this.bindGoals();
+    this.bindProfileModal();
+    this.bindShortcuts();
+    UI.setTheme(API.theme());
+    const p=API.profile();
+    if(p){$("#welcomeScreen").classList.add("hidden");$("#appScreen").classList.remove("hidden");this.updateProfileIcon();this.syncCalcHello();}
+    this.setView("calc");
+    this.renderResults();
+    this.updateGoalsUI();
+  },
+
+  /* ---------- Flow: Welcome → Profile ---------- */
+  bindWelcome(){
+    const startBtn=$("#startBtn");
+    const backBtn=$("#backToWelcome");
+    if(startBtn) startBtn.addEventListener("click",()=>{
+      $("#welcomeScreen").classList.add("hidden");
+      $("#profileSetupScreen").classList.remove("hidden");
+    });
+    if(backBtn) backBtn.addEventListener("click",()=>{
+      $("#profileSetupScreen").classList.add("hidden");
+      $("#welcomeScreen").classList.remove("hidden");
+    });
+  },
+  bindProfileSetup(){
+    $("#saveSetupProfile").addEventListener("click",()=>{
+      const profile={
+        name:$("#setupName").value.trim(),
+        age:Number($("#setupAge").value),
+        salary:Number($("#setupSalary").value),
+        hours:Number($("#setupHours").value)
+      };
+      if(!profile.name||!profile.age||!profile.salary||!profile.hours){alert("Tölts ki minden mezőt!");return;}
+      API.saveProfile(profile);
+      $("#profileSetupScreen").classList.add("hidden");
+      $("#appScreen").classList.remove("hidden");
+      this.updateProfileIcon(); this.syncCalcHello();
+      UI.coach("startup",{delay:520});
+    });
+  },
+
+  /* ---------- Theme ---------- */
+  bindTheme(){
+    const t=$("#themeToggle"); t.addEventListener("change",()=>UI.setTheme(t.checked?"dark":"light"));
+  },
+
+  /* ---------- Tabs (no profile tab) ---------- */
+  bindTabs(){
+    $$(".tab").forEach(tab=>tab.addEventListener("click",()=>this.setView(tab.dataset.view)));
+    $$('[data-view="calc"]').forEach(b=>b.addEventListener("click",()=>this.setView("calc")));
+  },
+  setView(v,opts={}){
+    const {coachDelay=null,suppressCoach=false}=opts||{};
+    this.state.view=v;
+    $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===v));
+    $("#view-calc").classList.toggle("hidden",v!=="calc");
+    $("#view-results").classList.toggle("hidden",v!=="results");
+    $("#view-stats").classList.toggle("hidden",v!=="stats");
+    $("#view-goals").classList.toggle("hidden",v!=="goals");
+    if(v==="results"){
+      this.renderResults();
+      if(!suppressCoach){
+        let delay;
+        if(typeof coachDelay==="number"&&coachDelay>=0){
+          delay=coachDelay;
+        }else if(this.state.lastAction&&this.state.lastAction.timestamp&&(Date.now()-this.state.lastAction.timestamp)<2600){
+          delay=3200;
+        }else{
+          delay=220;
+        }
+        UI.coach("results",{delay});
+      }
+    }
+    if(v==="stats") this.drawStats();
+    if(v==="calc") this.syncCalcHello();
+    const prefersReduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({top:0,behavior:prefersReduced?"auto":"smooth"});
+  },
+
+  /* ---------- Calculator ---------- */
+  bindCalculator(){
+    const calc=()=>{
+      const p=API.profile(); if(!p){alert("Előbb töltsd ki a profilod!");return;}
+      const name=$("#productName").value.trim(); const price=Number($("#productPrice").value);
+      if(!name||!price||price<=0){alert("Add meg a termék nevét és árát!");return;}
+      const hourly=p.salary/(p.hours*4); const hours=price/hourly;
+      $("#workHoursText").textContent=`Kb. ${hours.toFixed(1)} munkaórádba kerülne (${fmtFt(price)}).`;
+      $("#hourlyHint").textContent=`Jelenlegi órabéred ~ ${fmtFt(hourly)}/óra`;
+      const r=$("#calcResult"); r.dataset.name=name; r.dataset.price=String(price); r.dataset.hours=String(hours); r.classList.remove("hidden");
+    };
+    $("#calculateBtn").addEventListener("click",calc);
+
+    const commit=(type)=>{
+      const r=$("#calcResult"); const name=r.dataset.name; const price=Number(r.dataset.price); const hours=Number(r.dataset.hours);
+      if(!name||!price){alert("Előbb számolj!");return false;}
+      API.add(type,{name,price,hours});
+      this.state.lastAction={type,entry:{name,price,hours,at:now()}};
+      UI.showActionMessage(type==="saved"?"positive":"negative");
+      $("#productName").value=""; $("#productPrice").value=""; r.classList.add("hidden");
+      this.setView("results",{coachDelay:3200});
+    };
+    $("#saveBtn").addEventListener("click",()=>{
+      if(commit("saved")) this.setView("results",{coachDelay:3600});
+    });
+    $("#buyBtn").addEventListener("click",()=>{
+      if(commit("spent")) this.setView("results",{coachDelay:3600});
+    });
+  },
+  syncCalcHello(){
+    const p=API.profile(); const h=$("#hello");
+    if(!p){ h.textContent="Szia! Töltsd ki a profilod a pontos számításhoz."; return; }
+    h.innerHTML=`Szia <b>${esc(p.name)}</b>! Nézzük meg, hány órádba kerülne.`;
+  },
+
+  /* ---------- Results: list, search, filter, sort, edit/delete ---------- */
+  bindResults(){
+    $("#clearAll").addEventListener("click",()=>{
+      if(!confirm("Biztos üríted a listát?")) return;
+      const backup={saved:API.list("saved"),spent:API.list("spent")};
+      API.clearLists(); this.renderResults(); this.drawStats();
+      UI.snack("Lista törölve.",true,()=>{API.setList("saved",backup.saved);API.setList("spent",backup.spent);this.renderResults();this.drawStats();});
+    });
+    $("#searchBox").addEventListener("input",(e)=>{this.state.search=e.target.value.trim().toLowerCase(); this.renderResults();});
+    $("#filterSelect").addEventListener("change",(e)=>{this.state.filter=e.target.value; this.renderResults();});
+    $("#sortSelect").addEventListener("change",(e)=>{this.state.sort=e.target.value; this.renderResults();});
+  },
+  itemsFilteredSorted(){
+    const q=this.state.search; const filter=this.state.filter; const sort=this.state.sort;
+    let items=[...API.list("saved"),...API.list("spent")];
+    if(filter!=="all") items=items.filter(i=>i.type===filter);
+    if(q) items=items.filter(i=>(i.name||"").toLowerCase().includes(q));
+    items.sort((a,b)=>{
+      if(sort==="date_desc") return (b.at||0)-(a.at||0);
+      if(sort==="date_asc") return (a.at||0)-(b.at||0);
+      if(sort==="price_desc") return (b.price||0)-(a.price||0);
+      if(sort==="price_asc") return (a.price||0)-(b.price||0);
+      if(sort==="name_asc") return (a.name||"").localeCompare(b.name||"");
+      if(sort==="name_desc") return (b.name||"").localeCompare(a.name||"");
+      return 0;
+    });
+    return items;
+  },
+  renderResults(){
+    const saved=API.list("saved"), spent=API.list("spent");
+    const totalSaved=saved.reduce((s,i)=>s+Number(i.price||0),0);
+    const totalSpent=spent.reduce((s,i)=>s+Number(i.price||0),0);
+    $("#totalSaved").textContent=fmtFt(totalSaved);
+    $("#totalSpent").textContent=fmtFt(totalSpent);
+    $("#net").textContent=fmtFt(totalSaved-totalSpent);
+
+    const items=this.itemsFilteredSorted();
+    const ul=$("#itemList"); ul.innerHTML="";
+    items.forEach((it)=>{
+      const li=document.createElement("li"); li.className="item";
+      const meta=document.createElement("div"); meta.className="meta";
+      const badge=document.createElement("span"); badge.className="badge "+(it.type==="saved"?"b-green":"b-red"); badge.textContent=(it.type==="saved"?"spórolt":"vett");
+      const name=document.createElement("span"); name.innerHTML=esc(it.name);
+      const price=document.createElement("span"); price.className="price"; price.textContent=fmtFt(it.price);
+      meta.appendChild(badge); meta.appendChild(name); li.appendChild(meta); li.appendChild(price);
+      const actions=document.createElement("div"); actions.className="actions";
+      const editBtn=document.createElement("button"); editBtn.className="icon-btn secondary"; editBtn.title="Szerkesztés"; editBtn.textContent="✏️";
+      const delBtn=document.createElement("button"); delBtn.className="icon-btn danger"; delBtn.title="Törlés"; delBtn.textContent="🗑️";
+      actions.appendChild(editBtn); actions.appendChild(delBtn); li.appendChild(actions);
+      ul.appendChild(li);
+      editBtn.addEventListener("click",()=>this.editItem(it));
+      delBtn.addEventListener("click",()=>this.deleteItem(it));
+    });
+  },
+  editItem(item){
+    const newName=prompt("Új név:",item.name||""); if(newName===null) return;
+    let newPrice=prompt("Új ár (Ft):",String(item.price||0)); if(newPrice===null) return;
+    newPrice=Number(newPrice); if(!newName.trim()||!newPrice||newPrice<=0){alert("Érvénytelen érték.");return;}
+    const list=API.list(item.type).map(it=>{
+      if(it.at===item.at && it.name===item.name && it.price===item.price){
+        const ratio=(Number(it.price)>0 && Number.isFinite(Number(it.hours)))?Number(it.hours)/Number(it.price):null;
+        const hours=ratio!==null?Number((ratio*newPrice).toFixed(1)):it.hours;
+        return {...it,name:newName.trim(),price:newPrice,hours};
+      }
+      return it;
+    });
+    API.setList(item.type,list);
+    this.renderResults(); this.drawStats();
+    UI.snack("Tétel frissítve.");
+  },
+  deleteItem(item){
+    const list=API.list(item.type);
+    const idx=list.findIndex(it=>it.at===item.at && it.name===item.name && it.price===item.price);
+    if(idx===-1) return;
+    const removed=list[idx];
+    const updated=list.filter((_,i)=>i!==idx);
+    API.setList(item.type,updated);
+    this.renderResults(); this.drawStats();
+    UI.snack("Tétel törölve.",true,()=>{
+      const current=API.list(item.type);
+      if(current.some(it=>it.at===removed.at && it.name===removed.name && it.price===removed.price)) return;
+      const restored=[...current];
+      const insertAt=Math.min(idx,restored.length);
+      restored.splice(insertAt,0,removed);
+      API.setList(item.type,restored);
+      this.renderResults();
+      this.drawStats();
+    });
+  },
+
+  /* ---------- Stats ---------- */
+  drawStats(){
+    const cvs=$("#statsCanvas"); const ctx=cvs.getContext("2d");
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    const monthKey=ts=>{const d=new Date(ts);return d.getFullYear()+"-"+MONTHS[d.getMonth()]};
+    const map=new Map();
+    API.list("saved").forEach(it=>{const k=monthKey(it.at||now()); const o=map.get(k)||{saved:0,spent:0}; o.saved+=Number(it.price)||0; map.set(k,o);});
+    API.list("spent").forEach(it=>{const k=monthKey(it.at||now()); const o=map.get(k)||{saved:0,spent:0}; o.spent+=Number(it.price)||0; map.set(k,o);});
+    const arr=[...map.entries()].sort((a,b)=>a[0]>b[0]?1:-1).slice(-8);
+    const labels=arr.map(x=>x[0]), sData=arr.map(x=>x[1].saved), pData=arr.map(x=>x[1].spent);
+    const P={l:48,r:22,t:16,b:40}, W=cvs.width-P.l-P.r, H=cvs.height-P.t-P.b;
+    const style=getComputedStyle(document.documentElement);
+    ctx.strokeStyle=style.getPropertyValue("--line"); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(P.l,P.t); ctx.lineTo(P.l,P.t+H); ctx.lineTo(P.l+W,P.t+H); ctx.stroke();
+    const max=Math.max(1000,...sData,...pData); const y=v=>P.t+H-(v/max)*H; const unit=W/Math.max(1,labels.length); const bar=unit/2.4;
+    for(let i=0;i<labels.length;i++){
+      const x0=P.l+i*unit+8;
+      ctx.fillStyle=style.getPropertyValue("--green"); ctx.fillRect(x0, y(sData[i]), bar, (P.t+H)-y(sData[i]));
+      ctx.fillStyle=style.getPropertyValue("--red"); ctx.fillRect(x0+bar+6, y(pData[i]), bar, (P.t+H)-y(pData[i]));
+      ctx.fillStyle=style.getPropertyValue("--muted"); ctx.font="12px system-ui"; ctx.textAlign="center";
+      ctx.fillText(labels[i], x0+bar/2+3, P.t+H+16);
+    }
+    if(pData.length>=3){
+      const avg=[]; for(let i=0;i<pData.length;i++){ const a=pData.slice(Math.max(0,i-2),i+1); avg.push(a.reduce((s,v)=>s+v,0)/a.length); }
+      ctx.beginPath(); ctx.lineWidth=2; ctx.strokeStyle=style.getPropertyValue("--blue");
+      for(let i=0;i<avg.length;i++){ const x=P.l+i*unit+bar; const yy=y(avg[i]); if(i===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy); }
+      ctx.stroke();
+    }
+  },
+
+  /* ---------- Goals ---------- */
+  bindGoals(){
+    $("#saveGoals").addEventListener("click",()=>{
+      const g={monthlyCap:Number($("#monthlyCap").value)||0, savingGoal:Number($("#savingGoal").value)||0};
+      API.saveGoals(g); this.updateGoalsUI(); UI.snack("Célok mentve.");
+    });
+    $("#resetGoals").addEventListener("click",()=>{API.saveGoals({monthlyCap:0,savingGoal:0}); $("#monthlyCap").value=""; $("#savingGoal").value=""; this.updateGoalsUI();});
+  },
+  updateGoalsUI(){
+    const g=API.goals(); $("#monthlyCap").value=g.monthlyCap||""; $("#savingGoal").value=g.savingGoal||"";
+    const totalSaved=(API.list("saved").reduce((s,i)=>s+Number(i.price||0),0)); const goal=g.savingGoal||0;
+    const pct=goal>0?Math.min(100,Math.round((totalSaved/goal)*100)):0;
+    $("#goalProgressBar").style.width=pct+"%"; $("#goalProgressLabel").textContent=pct+"%";
+  },
+
+  /* ---------- Profile modal from icon ---------- */
+  bindProfileModal(){
+    $("#profileIcon").addEventListener("click",()=>{
+      const p=API.profile()||{name:"",age:"",salary:"",hours:""};
+      $("#editName").value=p.name||""; $("#editAge").value=p.age||""; $("#editSalary").value=p.salary||""; $("#editHours").value=p.hours||"";
+      $("#profileModal").classList.remove("hidden");
+    });
+    $("#closeModal").addEventListener("click",()=>$("#profileModal").classList.add("hidden"));
+    $("#saveEditProfile").addEventListener("click",()=>{
+      const p={name:$("#editName").value.trim(),age:Number($("#editAge").value),salary:Number($("#editSalary").value),hours:Number($("#editHours").value)};
+      if(!p.name||!p.age||!p.salary||!p.hours){alert("Tölts ki minden mezőt!");return;}
+      API.saveProfile(p); $("#profileModal").classList.add("hidden"); this.updateProfileIcon(); this.syncCalcHello(); UI.snack("Profil frissítve.");
+    });
+    $("#deleteProfile").addEventListener("click",()=>{
+      if(!confirm("Biztos törlöd a profilodat és minden adatot?")) return;
+      API.deleteProfile(); $("#profileModal").classList.add("hidden"); $("#appScreen").classList.add("hidden"); $("#welcomeScreen").classList.remove("hidden");
+    });
+  },
+  updateProfileIcon(){
+    const p=API.profile(); if(!p||!p.name) return;
+    $("#profileIcon").textContent=(p.name[0]||"👤").toUpperCase();
+  },
 
     <div id="coach" class="coach" aria-live="polite"></div>
     <div id="actionMessage" class="action-message hidden" role="status"></div>
     <div id="toast" class="toast hidden" role="status"></div>
 
-    <script src="app.js?v=clean-v1" defer></script>
-  </body>
+const A2HS=(()=>{
+  const sessionKey="a2hs-dismissed";
+  let deferred=null;
+  let pill=null;
+  let action=null;
+  let close=null;
+  const isStandalone=()=>{
+    return (window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||window.navigator.standalone===true;
+  };
+  const storage={
+    mark(){try{sessionStorage.setItem(sessionKey,"1");}catch(e){}},
+    dismissed(){try{return sessionStorage.getItem(sessionKey)==="1";}catch(e){return false;}}
+  };
+  const hide=()=>{if(pill) pill.classList.remove("show");};
+  const show=()=>{if(!pill||!deferred||storage.dismissed()) return; pill.classList.add("show");};
+  const bindInteractions=()=>{
+    if(!pill||!action||!close) return;
+    close.addEventListener("click",()=>{hide();storage.mark();});
+    action.addEventListener("click",async()=>{
+      hide();
+      storage.mark();
+      if(!deferred) return;
+      deferred.prompt();
+      try{await deferred.userChoice;}catch(e){}
+      deferred=null;
+    });
+  };
+  return{
+    init(){
+      if(isStandalone()) return;
+      pill=document.querySelector("#a2hsPill");
+      action=document.querySelector("#a2hsAction");
+      close=document.querySelector("#a2hsClose");
+      if(!pill||!action||!close) return;
+      bindInteractions();
+      window.addEventListener("beforeinstallprompt",(event)=>{
+        event.preventDefault();
+        deferred=event;
+        show();
+      });
+      window.addEventListener("appinstalled",()=>{storage.mark();hide();});
+    }
+  };
+})();
+
+const registerServiceWorker=()=>{
+  if(!("serviceWorker" in navigator)) return;
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").then((reg)=>{
+      console.info("Service worker registered:",reg.scope);
+    }).catch((err)=>{
+      console.error("Service worker registration failed:",err);
+    });
+  });
+};
+
+App.init();
+A2HS.init();
+registerServiceWorker();
+</script>
+</body>
 </html>
