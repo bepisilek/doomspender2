@@ -1,66 +1,117 @@
-/* ======================================================================
-   Utility helpers
-   ====================================================================== */
-const $ = (selector, scope = document) => scope.querySelector(selector);
-const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+/* =======================================================================
+   TINY HELPERS
+   ======================================================================= */
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const esc=s=>(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+const fmtFt=v=>new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(Number(v||0));
+const now=()=>Date.now();
+const MONTHS=["01","02","03","04","05","06","07","08","09","10","11","12"];
 
-const formatCurrency = (value) =>
-  new Intl.NumberFormat("hu-HU", { style: "currency", currency: "HUF", maximumFractionDigits: 0 }).format(
-    Number(value || 0)
-  );
-
-const formatDate = (timestamp) => {
-  if (!timestamp) return "";
-  return new Intl.DateTimeFormat("hu-HU", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(timestamp));
-};
-
-const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${Date.now()}-${Math.random().toString(16).slice(2)}`);
-
-/* ======================================================================
-   Local storage layer
-   ====================================================================== */
-const STORAGE_KEYS = {
-  profile: "munkaora_profile",
-  saved: "munkaora_saved",
-  spent: "munkaora_spent",
-  goals: "munkaora_goals",
-  theme: "munkaora_theme",
-};
-
-const Storage = {
-  get(key, fallback) {
-    try {
-      const value = localStorage.getItem(key);
-      return value ? JSON.parse(value) : fallback;
-    } catch (error) {
-      console.warn("Storage read error", error);
-      return fallback;
+/* =======================================================================
+   DATA LAYER + MIGRATION
+   ======================================================================= */
+const schemaVersion=2;
+const Data={
+  get:(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},
+  del:(k)=>localStorage.removeItem(k),
+  migrate(){
+    const v=Data.get("__schema")||1;
+    if(v<2){
+      ["saved","spent"].forEach(key=>{
+        const arr=Data.get(key)||[];
+        arr.forEach(it=>{
+          if(!it.at) it.at=now();
+          if(it.name && typeof it.name!=="string") it.name=String(it.name);
+          if(!it.type) it.type=key;
+          if(typeof it.price!=="number") it.price=Number(it.price)||0;
+          if(typeof it.hours!=="number") it.hours=Number(it.hours)||0;
+        });
+        Data.set(key,arr);
+      });
+      Data.set("__schema",2);
     }
-  },
-  set(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      console.warn("Storage write error", error);
-      return false;
-    }
-  },
-  remove(key) {
-    localStorage.removeItem(key);
-  },
+  }
 };
 
-/* ======================================================================
-   UI feedback helpers
-   ====================================================================== */
-const positiveMessages = [
+const API={
+  profile:()=>Data.get("profile"),
+  saveProfile:(p)=>Data.set("profile",p),
+  deleteProfile:()=>{["profile","saved","spent","goals"].forEach(Data.del)},
+  list:(type)=>{
+    const list=Data.get(type)||[];
+    return list.map(it=>({...it,type:it.type||type}));
+  },
+  add:(type,item)=>{
+    const list=Data.get(type)||[];
+    const normalized={
+      name:item.name||"",
+      price:Number(item.price)||0,
+      hours:Number(item.hours)||0,
+      at:now(),
+      type
+    };
+    list.unshift(normalized);
+    Data.set(type,list);
+  },
+  setList:(type,list)=>{
+    const normalized=list.map(it=>({
+      ...it,
+      type:it.type||type,
+      price:Number(it.price)||0,
+      hours:Number(it.hours)||0
+    }));
+    Data.set(type,normalized);
+  },
+  clearLists:()=>{Data.set("saved",[]);Data.set("spent",[])},
+  goals:()=>Data.get("goals")||{monthlyCap:0,savingGoal:0},
+  saveGoals:(g)=>Data.set("goals",g),
+  exportAll:()=>({__schema:schemaVersion,profile:API.profile(),saved:API.list("saved"),spent:API.list("spent"),goals:API.goals()}),
+  importAll:(obj)=>{
+    if(!obj||typeof obj!=="object") throw new Error("Érvénytelen JSON");
+    if(obj.__schema && obj.__schema>schemaVersion) throw new Error("Újabb sémájú adat – frissítsd az appot!");
+    if(obj.profile) Data.set("profile",obj.profile);
+    if(Array.isArray(obj.saved)) Data.set("saved",obj.saved);
+    if(Array.isArray(obj.spent)) Data.set("spent",obj.spent);
+    if(obj.goals) Data.set("goals",obj.goals);
+    Data.set("__schema",schemaVersion);
+  }
+};
+
+/* =======================================================================
+   COACH BUBBLE CONTEXTUAL MESSAGES
+   ======================================================================= */
+const COACH_CONTEXTS={
+  startup:[
+    "Szia Lajos! Nézzük, mennyi időt dolgoztál a vágyaidért. ⏳",
+    "Üdv újra, Lajos! Készen állsz egy kis pénzügyi matekra? 📈",
+    "Szia Lajos! Mutasd, mire gyűjtöttél mostanában. 💼"
+  ],
+  save:[
+    "Szépen spórolsz, Lajos! 💰",
+    "Ez igen, újabb munkaóra megmentve! 🙌",
+    "Szuper döntés, Lajos – így épül a tartalék. 🛡️",
+    "Most tényleg közelebb kerültél a célodhoz! 🏁"
+  ],
+  spend:[
+    "Hát ez most elment, de legalább hasznos volt. 😉",
+    "Megérte? Gondold át legközelebb! 💸",
+    "Egy kis öröm most, több munkaórád ment el. ⏱️",
+    "Oké, Lajos, de holnap spórolós nap jön! 😅"
+  ],
+  results:[
+    "Itt az eredmény, Lajos! 📊",
+    "Nézd meg, mennyit haladtál! 🚀",
+    "A számok nem hazudnak – ez a mérleged most. ⚖️",
+    "Ez a teljesítményed összefoglalva. 📘"
+  ]
+};
+
+/* =======================================================================
+   SZIA LAJOS! ACTION MESSAGES
+   ======================================================================= */
+const positiveMessages=[
   "Szia Lajos, most épp egy lépéssel közelebb vagy a szabadsághoz.",
   "Okos döntés, Lajos – még pár ilyen, és lesz nyaralásod is.",
   "Spórolni nem menő, csak hasznos – és te most hasznos vagy.",
@@ -70,10 +121,10 @@ const positiveMessages = [
   "Lassan, de biztosan, Lajos – a türelem forintot terem.",
   "Egy kicsit most gazdagabb vagy, még ha csak lélekben is.",
   "Szia Lajos, ez volt a felnőtt élet első jele.",
-  "Ha minden nap így döntesz, egyszer te leszel a motivációs poszt.",
+  "Ha minden nap így döntesz, egyszer te leszel a motivációs poszt."
 ];
 
-const negativeMessages = [
+const negativeMessages=[
   "Megvetted? Szép. A pénztárcád sír, de legalább te boldog vagy.",
   "Szia Lajos, most megint eladtad a jövőd egy kávéért.",
   "Gratulálok, a célod most épp hátrébb lépett kettőt.",
@@ -83,768 +134,457 @@ const negativeMessages = [
   "Még egy ilyen döntés, és a célod már csak mese lesz.",
   "Ha a pénz beszél, most épp azt mondta: viszlát.",
   "Jó választás lenne… egy másik univerzumban.",
-  "Szia Lajos, a jövőbeli éned most épp kikapcsolta a Wi-Fit, hogy ne lássa ezt.",
+  "Szia Lajos, a jövőbeli éned most épp kikapcsolta a Wi-Fit, hogy ne lássa ezt."
 ];
 
-const coachMessages = {
-  startup: [
-    "Szia Lajos! Nézzük, mennyi időt dolgoztál a vágyaidért. ⏳",
-    "Üdv újra, Lajos! Készen állsz egy kis pénzügyi matekra? 📈",
-    "Szia Lajos! Mutasd, mire gyűjtöttél mostanában. 💼",
-  ],
-  save: [
-    "Szépen spórolsz, Lajos! 💰",
-    "Ez igen, újabb munkaóra megmentve! 🙌",
-    "Szuper döntés, Lajos – így épül a tartalék. 🛡️",
-    "Most tényleg közelebb kerültél a célodhoz! 🏁",
-  ],
-  spend: [
-    "Hát ez most elment, de legalább hasznos volt. 😉",
-    "Megérte? Gondold át legközelebb! 💸",
-    "Egy kis öröm most, több munkaórád ment el. ⏱️",
-    "Oké, Lajos, de holnap spórolós nap jön! 😅",
-  ],
-  results: [
-    "Itt az eredmény, Lajos! 📊",
-    "Nézd meg, mennyit haladtál! 🚀",
-    "A számok nem hazudnak – ez a mérleged most. ⚖️",
-    "Ez a teljesítményed összefoglalva. 📘",
-  ],
+/* =======================================================================
+   UI HELPERS
+   ======================================================================= */
+const UI={
+  snackTimer:null,
+  coachTimer:null,
+  coachDelayTimer:null,
+  actionMessageTimer:null,
+  snack(msg,withUndo,undoFn){
+    const s=$("#snack");
+    if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
+    s.classList.remove("hidden"); s.innerHTML="";
+    const t=document.createElement("span"); t.textContent=msg; s.appendChild(t);
+    if(withUndo){
+      const b=document.createElement("button");
+      b.textContent="Visszavonás";
+      b.addEventListener("click",()=>{
+        if(undoFn) undoFn();
+        s.classList.add("hidden");
+        if(this.snackTimer){clearTimeout(this.snackTimer); this.snackTimer=null;}
+      });
+      s.appendChild(b);
+    }
+    this.snackTimer=setTimeout(()=>{
+      s.classList.add("hidden");
+      this.snackTimer=null;
+    },3500);
+  },
+  coach(context,opts={}){
+    const pool=COACH_CONTEXTS[context];
+    if(!pool||!pool.length) return;
+    const delay=Math.max(0,Number(opts.delay)||0);
+    const duration=Math.max(1200,Number(opts.duration)||2800);
+    const run=()=>{
+      const b=$("#coach");
+      if(!b) return;
+      if(this.coachTimer){clearTimeout(this.coachTimer); this.coachTimer=null;}
+      b.classList.remove("show");
+      void b.offsetWidth;
+      b.textContent=pool[Math.floor(Math.random()*pool.length)];
+      b.classList.add("show");
+      this.coachTimer=setTimeout(()=>{
+        b.classList.remove("show");
+        this.coachTimer=null;
+      },duration);
+    };
+    if(this.coachDelayTimer){clearTimeout(this.coachDelayTimer); this.coachDelayTimer=null;}
+    if(delay>0){
+      this.coachDelayTimer=setTimeout(()=>{run(); this.coachDelayTimer=null;},delay);
+    }else{
+      run();
+    }
+  }
 };
 
-const UI = {
-  actionTimer: null,
-  coachTimer: null,
-  toastTimer: null,
-  showActionMessage(text, type = "info") {
-    const target = $("#actionMessage");
-    if (!target) {
-      console.warn("UI.showActionMessage: target element not found", text);
-      return;
+UI.showActionMessage=function(text,type){
+  const target=document.querySelector('#action-message,[data-action-message]')||$("#funnyThreat");
+  if(!target){
+    console.warn("UI.showActionMessage: target element not found");
+    return;
+  }
+  let kind=type;
+  let message=text;
+  if((message==="positive"||message==="negative")&&!kind){
+    kind=message;
+    message=null;
+  }
+  if(!message){
+    const pool=kind==="positive"?positiveMessages:kind==="negative"?negativeMessages:[];
+    if(pool.length){
+      message=pool[Math.floor(Math.random()*pool.length)];
     }
-    target.textContent = text;
-    target.dataset.type = type;
-    target.classList.add("visible");
-    target.classList.remove("hidden");
-    if (this.actionTimer) clearTimeout(this.actionTimer);
-    this.actionTimer = setTimeout(() => {
-      target.classList.remove("visible");
-      setTimeout(() => target.classList.add("hidden"), 300);
-      this.actionTimer = null;
-    }, 3000);
-  },
-  showCoach(context) {
-    const pool = coachMessages[context];
-    if (!pool || !pool.length) return;
-    const message = pool[Math.floor(Math.random() * pool.length)];
-    const box = $("#coach");
-    if (!box) return;
-    box.textContent = message;
-    box.classList.add("visible");
-    if (this.coachTimer) clearTimeout(this.coachTimer);
-    this.coachTimer = setTimeout(() => {
-      box.classList.remove("visible");
-    }, 2600);
-  },
-  toast(message) {
-    const box = $("#toast");
-    if (!box) {
-      console.log(message);
-      return;
-    }
-    box.textContent = message;
-    box.classList.add("visible");
-    box.classList.remove("hidden");
-    if (this.toastTimer) clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => {
-      box.classList.remove("visible");
-      setTimeout(() => box.classList.add("hidden"), 300);
-      this.toastTimer = null;
-    }, 3200);
-  },
+  }
+  if(!message){
+    console.warn("UI.showActionMessage: no message to display");
+    return;
+  }
+  if(UI.actionMessageTimer){
+    clearTimeout(UI.actionMessageTimer);
+    UI.actionMessageTimer=null;
+  }
+  target.classList.remove("show");
+  void target.offsetWidth;
+  target.textContent=message;
+  target.classList.add("show");
+  UI.actionMessageTimer=setTimeout(()=>{
+    target.classList.remove("show");
+    UI.actionMessageTimer=null;
+  },2000);
 };
 
-/* ======================================================================
-   Application controller
-   ====================================================================== */
-const App = {
-  state: {
-    profile: null,
-    view: "calc",
-    calculation: null,
-    entries: {
-      saved: [],
-      spent: [],
-    },
-    filters: {
-      search: "",
-      type: "all",
-      sort: "date_desc",
-    },
-    goals: {
-      monthlyCap: 0,
-      savingGoal: 0,
-    },
-  },
-  swUpdateNotified: false,
-
-  init() {
-    this.cacheDom();
-    this.initTheme();
-    this.bindEvents();
-    this.bindTheme();
-    this.restoreState();
-    this.updateUI();
-    this.setView(this.state.view || "calc");
-    this.registerServiceWorker();
-  },
-
-  cacheDom() {
-    this.el = {
-      welcomeOverlay: $("#welcomeOverlay"),
-      welcomeStart: $("#welcomeStart"),
-      appShell: $("#appShell"),
-      profileModal: $("#profileModal"),
-      profileForm: $("#profileForm"),
-      profileReset: $("#profileReset"),
-      profileButton: $("#profileButton"),
-      themeToggle: $("#themeToggle"),
-      modalBackdrop: $("#profileModal .modal__backdrop"),
-      calcForm: $("#calcForm"),
-      calcAlert: $("#calcAlert"),
-      calcResult: $("#calcResult"),
-      resultText: $("#resultText"),
-      resultDetail: $("#resultDetail"),
-      decisionSave: $("#decisionSave"),
-      decisionBuy: $("#decisionBuy"),
-      tabs: $$(".tab"),
-      views: $$(".view"),
-      welcomeHint: $("#welcomeHint"),
-      resultsList: $("#resultsList"),
-      totals: {
-        saved: $("#totalSaved"),
-        spent: $("#totalSpent"),
-        net: $("#totalNet"),
-      },
-      searchInput: $("#searchInput"),
-      filterSelect: $("#filterSelect"),
-      sortSelect: $("#sortSelect"),
-      clearEntries: $("#clearEntries"),
-      statsContainer: $("#statsContainer"),
-      statsEmpty: $("#statsEmpty"),
-      goalsForm: $("#goalsForm"),
-      resetGoals: $("#resetGoals"),
-      goalProgressBar: $("#goalProgressBar"),
-      goalProgressLabel: $("#goalProgressLabel"),
-      goalStatus: $("#goalStatus"),
-    };
-  },
-
-  bindEvents() {
-    if (this.el.welcomeStart) {
-      this.el.welcomeStart.addEventListener("click", () => this.openProfileModal());
+/* =======================================================================
+   APP
+   ======================================================================= */
+const App={
+  state:{view:"calc",search:"",filter:"all",sort:"date_desc",lastAction:null},
+  init(){
+    Data.migrate();
+    this.bindWelcome();
+    this.bindProfileSetup();
+    this.bindTabs();
+    this.bindCalculator();
+    this.bindResults();
+    this.bindGoals();
+    this.bindProfileModal();
+    this.bindShortcuts();
+    const p=API.profile();
+    if(p){
+      $("#welcomeScreen").classList.add("hidden");
+      $("#appScreen").classList.remove("hidden");
+      this.updateProfileIcon();
+      this.syncCalcHello();
+      UI.coach("startup",{delay:500});
     }
-
-    if (this.el.profileButton) {
-      this.el.profileButton.addEventListener("click", () => this.openProfileModal());
-    }
-
-    $$("[data-close='profile']", this.el.profileModal).forEach((btn) => {
-      btn.addEventListener("click", () => this.closeProfileModal());
-    });
-
-    if (this.el.profileForm) {
-      this.el.profileForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        this.saveProfile(new FormData(this.el.profileForm));
-      });
-    }
-
-    if (this.el.profileReset) {
-      this.el.profileReset.addEventListener("click", () => this.resetAllData());
-    }
-
-    if (this.el.calcForm) {
-      this.el.calcForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        this.calculate();
-      });
-      $$("input", this.el.calcForm).forEach((input) => {
-        input.addEventListener("input", () => {
-          this.el.calcAlert.classList.add("hidden");
-        });
-      });
-    }
-
-    if (this.el.decisionSave) {
-      this.el.decisionSave.addEventListener("click", () => this.commitDecision("saved"));
-    }
-
-    if (this.el.decisionBuy) {
-      this.el.decisionBuy.addEventListener("click", () => this.commitDecision("spent"));
-    }
-
-    this.el.tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        const view = tab.dataset.view;
-        this.setView(view);
-      });
-    });
-
-    if (this.el.searchInput) {
-      this.el.searchInput.addEventListener("input", (event) => {
-        this.state.filters.search = event.target.value;
-        this.renderResults();
-      });
-    }
-
-    if (this.el.filterSelect) {
-      this.el.filterSelect.addEventListener("change", (event) => {
-        this.state.filters.type = event.target.value;
-        this.renderResults();
-      });
-    }
-
-    if (this.el.sortSelect) {
-      this.el.sortSelect.addEventListener("change", (event) => {
-        this.state.filters.sort = event.target.value;
-        this.renderResults();
-      });
-    }
-
-    if (this.el.clearEntries) {
-      this.el.clearEntries.addEventListener("click", () => this.clearEntries());
-    }
-
-    if (this.el.resultsList) {
-      this.el.resultsList.addEventListener("click", (event) => {
-        const button = event.target.closest("button[data-id]");
-        if (!button) return;
-        const { id, type } = button.dataset;
-        this.deleteEntry(type, id);
-      });
-    }
-
-    if (this.el.goalsForm) {
-      this.el.goalsForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        this.saveGoals(new FormData(this.el.goalsForm));
-      });
-    }
-
-    if (this.el.resetGoals) {
-      this.el.resetGoals.addEventListener("click", () => this.resetGoals());
-    }
-
-    $$('button[data-view="calc"]').forEach((btn) => {
-      btn.addEventListener("click", () => this.setView("calc"));
-    });
-  },
-
-  initTheme() {
-    const saved = Storage.get(STORAGE_KEYS.theme, null);
-    const prefersDark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
-    const initial = saved || (prefersDark && prefersDark.matches ? "dark" : "light");
-    this.applyTheme(initial);
-  },
-
-  applyTheme(theme) {
-    const next = theme === "dark" ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", next);
-    Storage.set(STORAGE_KEYS.theme, next);
-    if (this.el.themeToggle) {
-      this.el.themeToggle.checked = next === "dark";
-      this.el.themeToggle.setAttribute("aria-checked", String(next === "dark"));
-    }
-  },
-
-  bindTheme() {
-    if (!this.el.themeToggle) return;
-    this.el.themeToggle.checked = document.documentElement.getAttribute("data-theme") === "dark";
-    this.el.themeToggle.setAttribute("aria-checked", String(this.el.themeToggle.checked));
-    this.el.themeToggle.addEventListener("change", () => {
-      const theme = this.el.themeToggle.checked ? "dark" : "light";
-      this.applyTheme(theme);
-    });
-  },
-
-  restoreState() {
-    const profile = Storage.get(STORAGE_KEYS.profile, null);
-    const saved = Storage.get(STORAGE_KEYS.saved, []);
-    const spent = Storage.get(STORAGE_KEYS.spent, []);
-    const goals = Storage.get(STORAGE_KEYS.goals, { monthlyCap: 0, savingGoal: 0 });
-
-    this.state.profile = profile;
-    this.state.entries.saved = Array.isArray(saved) ? saved : [];
-    this.state.entries.spent = Array.isArray(spent) ? spent : [];
-    this.state.goals = goals || { monthlyCap: 0, savingGoal: 0 };
-
-    if (profile) {
-      this.showApp();
-      UI.showCoach("startup");
-      this.populateProfileHeader();
-    }
-  },
-
-  updateUI() {
-    this.populateProfileHeader();
+    this.setView("calc");
     this.renderResults();
-    this.renderStats();
-    this.populateProfileForm();
-    this.populateGoalsForm();
-    this.updateGoalProgress();
+    this.updateGoalsUI();
   },
 
-  showApp() {
-    this.el.appShell.classList.remove("hidden");
-    this.el.welcomeOverlay.classList.remove("active");
-    this.el.welcomeOverlay.classList.add("hidden");
-  },
-
-  openProfileModal() {
-    this.populateProfileForm();
-    this.el.profileModal.classList.remove("hidden");
-    this.el.profileModal.classList.add("active");
-  },
-
-  closeProfileModal() {
-    this.el.profileModal.classList.remove("active");
-    this.el.profileModal.classList.add("hidden");
-  },
-
-  saveProfile(formData) {
-    const profile = {
-      name: (formData.get("name") || "").toString().trim(),
-      age: Number(formData.get("age")),
-      salary: Number(formData.get("salary")),
-      hours: Number(formData.get("hours")),
-    };
-
-    if (!profile.name || !profile.age || !profile.salary || !profile.hours) {
-      UI.toast("Tölts ki minden mezőt a profilban!");
-      return;
-    }
-
-    Storage.set(STORAGE_KEYS.profile, profile);
-    this.state.profile = profile;
-    this.populateProfileHeader();
-    this.showApp();
-    this.closeProfileModal();
-    UI.toast("Profil mentve.");
-  },
-
-  resetAllData() {
-    if (!confirm("Biztosan törlöd az összes adatot?")) return;
-    [STORAGE_KEYS.profile, STORAGE_KEYS.saved, STORAGE_KEYS.spent, STORAGE_KEYS.goals].forEach((key) =>
-      Storage.remove(key)
-    );
-    this.state.profile = null;
-    this.state.entries.saved = [];
-    this.state.entries.spent = [];
-    this.state.goals = { monthlyCap: 0, savingGoal: 0 };
-    this.el.appShell.classList.add("hidden");
-    this.el.welcomeOverlay.classList.add("active");
-    this.el.welcomeOverlay.classList.remove("hidden");
-    this.closeProfileModal();
-    this.el.calcForm.reset();
-    this.el.calcResult.classList.add("hidden");
-    this.el.welcomeHint.textContent = "Szia! Kezdjük egy új tétellel.";
-    this.updateUI();
-    UI.toast("Minden adat törölve.");
-  },
-
-  populateProfileForm() {
-    if (!this.el.profileForm) return;
-    const profile = this.state.profile || { name: "", age: "", salary: "", hours: "" };
-    $("#profileName").value = profile.name || "";
-    $("#profileAge").value = profile.age || "";
-    $("#profileSalary").value = profile.salary || "";
-    $("#profileHours").value = profile.hours || "";
-  },
-
-  calculate() {
-    if (!this.state.profile) {
-      this.showCalcError("Először állítsd be a profilodat!");
-      this.openProfileModal();
-      return;
-    }
-
-    const name = $("#productName").value.trim();
-    const price = Number($("#productPrice").value);
-
-    if (!name || !price || price <= 0) {
-      this.showCalcError("Adj meg egy nevet és érvényes árat!");
-      return;
-    }
-
-    const hourly = this.getHourlyRate();
-    if (!hourly || hourly <= 0) {
-      this.showCalcError("Nem sikerült kiszámolni az órabért. Ellenőrizd a profilodat!");
-      return;
-    }
-
-    const hours = price / hourly;
-    this.state.calculation = {
-      id: uid(),
-      name,
-      price,
-      hours,
-      at: Date.now(),
-    };
-
-    this.el.calcAlert.classList.add("hidden");
-    this.el.calcResult.classList.remove("hidden");
-    this.el.resultText.textContent = `Kb. ${hours.toFixed(1)} munkaórádba kerülne (${formatCurrency(price)}).`;
-    const hourlyRounded = Math.round(hourly);
-    this.el.resultDetail.textContent = `Órabéred: ${formatCurrency(hourlyRounded)} / óra.`;
-  },
-
-  showCalcError(message) {
-    this.el.calcAlert.textContent = message;
-    this.el.calcAlert.classList.remove("hidden");
-  },
-
-  getHourlyRate() {
-    const profile = this.state.profile;
-    if (!profile) return 0;
-    const monthlySalary = Number(profile.salary) || 0;
-    const weeklyHours = Number(profile.hours) || 0;
-    if (!monthlySalary || !weeklyHours) return 0;
-    const monthlyHours = weeklyHours * 4;
-    return monthlySalary / monthlyHours;
-  },
-
-  commitDecision(type) {
-    if (!this.state.calculation) {
-      UI.toast("Előbb számolj ki egy tételt!");
-      return;
-    }
-
-    const entry = {
-      id: uid(),
-      name: this.state.calculation.name,
-      price: this.state.calculation.price,
-      hours: this.state.calculation.hours,
-      at: Date.now(),
-      type,
-    };
-
-    this.state.entries[type].unshift(entry);
-    Storage.set(STORAGE_KEYS[type], this.state.entries[type]);
-
-    this.state.calculation = null;
-    this.el.calcForm.reset();
-    this.el.calcResult.classList.add("hidden");
-
-    this.setView("results");
-
-    const messagePool = type === "saved" ? positiveMessages : negativeMessages;
-    const message = messagePool[Math.floor(Math.random() * messagePool.length)];
-    try {
-      UI.showActionMessage(message);
-    } catch (error) {
-      console.warn("Action message error", error);
-    }
-
-    UI.showCoach(type === "saved" ? "save" : "spend");
-    this.renderResults();
-    this.renderStats();
-    this.updateGoalProgress();
-  },
-
-  deleteEntry(type, id) {
-    const list = this.state.entries[type];
-    const index = list.findIndex((item) => item.id === id);
-    if (index === -1) return;
-    list.splice(index, 1);
-    Storage.set(STORAGE_KEYS[type], list);
-    this.renderResults();
-    this.renderStats();
-    this.updateGoalProgress();
-    UI.toast("Tétel törölve.");
-  },
-
-  clearEntries() {
-    if (!confirm("Biztosan törlöd az összes tételt?")) return;
-    this.state.entries.saved = [];
-    this.state.entries.spent = [];
-    Storage.set(STORAGE_KEYS.saved, []);
-    Storage.set(STORAGE_KEYS.spent, []);
-    this.renderResults();
-    this.renderStats();
-    this.updateGoalProgress();
-  },
-
-  getFilteredEntries() {
-    const combined = [...this.state.entries.saved, ...this.state.entries.spent];
-    const search = this.state.filters.search.trim().toLowerCase();
-    const type = this.state.filters.type;
-    const sort = this.state.filters.sort;
-
-    let list = combined.filter((item) => {
-      const matchesSearch = !search || item.name.toLowerCase().includes(search);
-      const matchesType = type === "all" || item.type === type;
-      return matchesSearch && matchesType;
+  /* ---------- Flow: Welcome → Profile ---------- */
+  bindWelcome(){
+    const startBtn=$("#startBtn");
+    const backBtn=$("#backToWelcome");
+    if(startBtn) startBtn.addEventListener("click",()=>{
+      $("#welcomeScreen").classList.add("hidden");
+      $("#profileSetupScreen").classList.remove("hidden");
     });
-
-    const compare = {
-      date_desc: (a, b) => b.at - a.at,
-      date_asc: (a, b) => a.at - b.at,
-      price_desc: (a, b) => b.price - a.price,
-      price_asc: (a, b) => a.price - b.price,
-      name_asc: (a, b) => a.name.localeCompare(b.name, "hu"),
-      name_desc: (a, b) => b.name.localeCompare(a.name, "hu"),
-    };
-
-    if (compare[sort]) {
-      list = list.sort(compare[sort]);
-    }
-
-    return list;
-  },
-
-  renderResults() {
-    const entries = this.getFilteredEntries();
-    const container = this.el.resultsList;
-    container.innerHTML = "";
-
-    if (!entries.length) {
-      const empty = document.createElement("li");
-      empty.className = "list__item";
-      empty.innerHTML = "<p class=\"muted\">Még nincs rögzített tétel.</p>";
-      container.appendChild(empty);
-    } else {
-      entries.forEach((item) => {
-        const li = document.createElement("li");
-        li.className = "list__item";
-        li.innerHTML = `
-          <div class="list__item-header">
-            <strong>${item.name}</strong>
-            <span class="badge ${item.type === "saved" ? "badge--saved" : "badge--spent"}">
-              ${item.type === "saved" ? "Megspórolt" : "Megvett"}
-            </span>
-          </div>
-          <div class="list__item-meta">
-            <span>${formatCurrency(item.price)}</span>
-            <span>${item.hours.toFixed(1)} óra</span>
-            <span>${formatDate(item.at)}</span>
-          </div>
-          <div class="list__item-actions">
-            <button class="btn btn--ghost" data-id="${item.id}" data-type="${item.type}" type="button">Törlés</button>
-          </div>
-        `;
-        container.appendChild(li);
-      });
-    }
-
-    const totalSaved = this.state.entries.saved.reduce((sum, item) => sum + Number(item.price), 0);
-    const totalSpent = this.state.entries.spent.reduce((sum, item) => sum + Number(item.price), 0);
-    const totalNet = totalSaved - totalSpent;
-
-    this.el.totals.saved.textContent = formatCurrency(totalSaved);
-    this.el.totals.spent.textContent = formatCurrency(totalSpent);
-    this.el.totals.net.textContent = formatCurrency(totalNet);
-  },
-
-  renderStats() {
-    const all = [...this.state.entries.saved, ...this.state.entries.spent];
-    const container = this.el.statsContainer;
-    container.innerHTML = "";
-
-    if (!all.length) {
-      this.el.statsEmpty.classList.remove("hidden");
-      return;
-    }
-
-    const groups = new Map();
-    all.forEach((item) => {
-      const date = new Date(item.at);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      if (!groups.has(key)) {
-        groups.set(key, { saved: 0, spent: 0 });
-      }
-      const bucket = groups.get(key);
-      if (item.type === "saved") bucket.saved += Number(item.price);
-      else bucket.spent += Number(item.price);
+    if(backBtn) backBtn.addEventListener("click",()=>{
+      $("#profileSetupScreen").classList.add("hidden");
+      $("#welcomeScreen").classList.remove("hidden");
     });
-
-    const ordered = Array.from(groups.entries())
-      .sort(([a], [b]) => (a > b ? 1 : -1))
-      .slice(-6);
-
-    ordered.forEach(([month, values]) => {
-      const row = document.createElement("div");
-      row.className = "stat-row";
-      const net = values.saved - values.spent;
-      row.innerHTML = `
-        <div class="stat-row__meta">
-          <span>${month}</span>
-          <span>${formatCurrency(net)}</span>
-        </div>
-        <div class="stat-row__bars">
-          <div>
-            <small class="muted">Megspórolt</small>
-            <div class="bar"><span style="width:${this.calcBarWidth(values.saved, ordered)}; background: rgba(34, 197, 94, 0.85);"></span></div>
-            <strong>${formatCurrency(values.saved)}</strong>
-          </div>
-          <div>
-            <small class="muted">Megvett</small>
-            <div class="bar"><span style="width:${this.calcBarWidth(values.spent, ordered)}; background: rgba(239, 68, 68, 0.85);"></span></div>
-            <strong>${formatCurrency(values.spent)}</strong>
-          </div>
-        </div>
-      `;
-      container.appendChild(row);
+  },
+  bindProfileSetup(){
+    $("#saveSetupProfile").addEventListener("click",()=>{
+      const profile={
+        name:$("#setupName").value.trim(),
+        age:Number($("#setupAge").value),
+        salary:Number($("#setupSalary").value),
+        hours:Number($("#setupHours").value)
+      };
+      if(!profile.name||!profile.age||!profile.salary||!profile.hours){alert("Tölts ki minden mezőt!");return;}
+      API.saveProfile(profile);
+      $("#profileSetupScreen").classList.add("hidden");
+      $("#appScreen").classList.remove("hidden");
+      this.updateProfileIcon(); this.syncCalcHello();
+      UI.coach("startup",{delay:520});
     });
-
-    this.el.statsEmpty.classList.toggle("hidden", ordered.length > 0);
   },
 
-  calcBarWidth(value, dataset) {
-    const max = Math.max(...dataset.map(([, val]) => Math.max(val.saved, val.spent)), 1);
-    const ratio = value / max;
-    return `${Math.max(6, ratio * 100)}%`;
+  /* ---------- Tabs (no profile tab) ---------- */
+  bindTabs(){
+    $$(".tab").forEach(tab=>tab.addEventListener("click",()=>this.setView(tab.dataset.view)));
+    $$('[data-view="calc"]').forEach(b=>b.addEventListener("click",()=>this.setView("calc")));
   },
-
-  populateGoalsForm() {
-    if (!this.el.goalsForm) return;
-    this.el.goalsForm.monthlyCap.value = this.state.goals.monthlyCap || "";
-    this.el.goalsForm.savingGoal.value = this.state.goals.savingGoal || "";
-  },
-
-  saveGoals(formData) {
-    const goals = {
-      monthlyCap: Number(formData.get("monthlyCap")) || 0,
-      savingGoal: Number(formData.get("savingGoal")) || 0,
-    };
-    Storage.set(STORAGE_KEYS.goals, goals);
-    this.state.goals = goals;
-    this.updateGoalProgress();
-    UI.toast("Célok mentve.");
-  },
-
-  resetGoals() {
-    Storage.set(STORAGE_KEYS.goals, { monthlyCap: 0, savingGoal: 0 });
-    this.state.goals = { monthlyCap: 0, savingGoal: 0 };
-    this.populateGoalsForm();
-    this.updateGoalProgress();
-  },
-
-  updateGoalProgress() {
-    const totalSaved = this.state.entries.saved.reduce((sum, item) => sum + Number(item.price), 0);
-    const { savingGoal, monthlyCap } = this.state.goals;
-    const progress = savingGoal ? Math.min(1, totalSaved / savingGoal) : 0;
-    this.el.goalProgressBar.style.width = `${(progress * 100).toFixed(0)}%`;
-    this.el.goalProgressLabel.textContent = `${(progress * 100).toFixed(0)}%`;
-
-    if (savingGoal) {
-      this.el.goalStatus.textContent = `Még ${formatCurrency(Math.max(0, savingGoal - totalSaved))} hiányzik a célhoz.`;
-    } else {
-      this.el.goalStatus.textContent = "Adj meg egy célt, hogy kövesd a haladást.";
-    }
-
-    if (monthlyCap) {
-      const spentThisMonth = this.getSpentThisMonth();
-      this.el.goalStatus.textContent += ` Havi keret: ${formatCurrency(monthlyCap)} • Eddig ${formatCurrency(spentThisMonth)}-t költöttél.`;
-    }
-  },
-
-  getSpentThisMonth() {
-    const nowDate = new Date();
-    const month = nowDate.getMonth();
-    const year = nowDate.getFullYear();
-    return this.state.entries.spent
-      .filter((item) => {
-        const date = new Date(item.at);
-        return date.getMonth() === month && date.getFullYear() === year;
-      })
-      .reduce((sum, item) => sum + Number(item.price), 0);
-  },
-
-  setView(view) {
-    this.state.view = view;
-    this.el.tabs.forEach((tab) => {
-      const active = tab.dataset.view === view;
-      tab.classList.toggle("active", active);
-      tab.setAttribute("aria-selected", active);
-    });
-
-    this.el.views.forEach((section) => {
-      section.classList.toggle("active", section.id === `view-${view}`);
-    });
-
-    if (view === "results") {
+  setView(v,opts={}){
+    const {coachDelay=null,suppressCoach=false}=opts||{};
+    this.state.view=v;
+    $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===v));
+    $("#view-calc").classList.toggle("hidden",v!=="calc");
+    $("#view-results").classList.toggle("hidden",v!=="results");
+    $("#view-stats").classList.toggle("hidden",v!=="stats");
+    $("#view-goals").classList.toggle("hidden",v!=="goals");
+    if(v==="results"){
       this.renderResults();
-      UI.showCoach("results");
-    } else if (view === "stats") {
-      this.renderStats();
-    } else if (view === "goals") {
-      this.updateGoalProgress();
+      if(!suppressCoach){
+        let delay;
+        if(typeof coachDelay==="number"&&coachDelay>=0){
+          delay=coachDelay;
+        }else if(this.state.lastAction&&this.state.lastAction.timestamp&&(Date.now()-this.state.lastAction.timestamp)<2600){
+          delay=3200;
+        }else{
+          delay=220;
+        }
+        UI.coach("results",{delay});
+      }
     }
+    if(v==="stats") this.drawStats();
+    if(v==="calc") this.syncCalcHello();
+    const prefersReduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({top:0,behavior:prefersReduced?"auto":"smooth"});
   },
 
-  populateProfileHeader() {
-    if (!this.el.welcomeHint) return;
-    if (this.state.profile) {
-      this.el.welcomeHint.textContent = `Szia ${this.state.profile.name}! Adj meg egy tételt.`;
-    } else {
-      this.el.welcomeHint.textContent = "Szia! Kezdjük egy új tétellel.";
-    }
+  /* ---------- Calculator ---------- */
+  bindCalculator(){
+    const calc=()=>{
+      const p=API.profile(); if(!p){alert("Előbb töltsd ki a profilod!");return;}
+      const name=$("#productName").value.trim(); const price=Number($("#productPrice").value);
+      if(!name||!price||price<=0){alert("Add meg a termék nevét és árát!");return;}
+      const hourly=p.salary/(p.hours*4); const hours=price/hourly;
+      $("#workHoursText").textContent=`Kb. ${hours.toFixed(1)} munkaórádba kerülne (${fmtFt(price)}).`;
+      $("#hourlyHint").textContent=`Jelenlegi órabéred ~ ${fmtFt(hourly)}/óra`;
+      const r=$("#calcResult"); r.dataset.name=name; r.dataset.price=String(price); r.dataset.hours=String(hours); r.classList.remove("hidden");
+    };
+    $("#calculateBtn").addEventListener("click",calc);
+
+    const commit=(type)=>{
+      const r=$("#calcResult"); const name=r.dataset.name; const price=Number(r.dataset.price); const hours=Number(r.dataset.hours);
+      if(!name||!price){alert("Előbb számolj!");return false;}
+      API.add(type,{name,price,hours});
+      const actionContext=type==="saved"?"save":"spend";
+      const timestamp=now();
+      this.state.lastAction={type,entry:{name,price,hours,at:timestamp},timestamp};
+      this.setView("results",{coachDelay:3600});
+      try{
+        if(typeof UI.showActionMessage==="function"){
+          UI.showActionMessage(type==="saved"?"positive":"negative");
+        }else{
+          console.warn("UI.showActionMessage is unavailable");
+        }
+      }catch(err){
+        console.error("Failed to show action message",err);
+      }
+      UI.coach(actionContext,{delay:220,duration:3000});
+      $("#productName").value=""; $("#productPrice").value=""; r.classList.add("hidden");
+      return true;
+    };
+    $("#saveBtn").addEventListener("click",()=>{commit("saved");});
+    $("#buyBtn").addEventListener("click",()=>{commit("spent");});
+  },
+  syncCalcHello(){
+    const p=API.profile(); const h=$("#hello");
+    if(!p){ h.textContent="Szia! Töltsd ki a profilod a pontos számításhoz."; return; }
+    h.innerHTML=`Szia <b>${esc(p.name)}</b>! Nézzük meg, hány órádba kerülne.`;
   },
 
-  registerServiceWorker() {
-    if (!("serviceWorker" in navigator)) return;
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("./sw.js?v=20250206")
-        .then((registration) => {
-          console.info("[SW] Registered:", registration.scope);
-          if (registration.waiting) {
-            this.notifyServiceWorkerUpdate(registration.waiting);
-          }
-          registration.addEventListener("updatefound", () => {
-            const installing = registration.installing;
-            if (!installing) return;
-            console.info("[SW] Update found");
-            installing.addEventListener("statechange", () => {
-              console.info("[SW] State:", installing.state);
-              if (installing.state === "installed") {
-                if (navigator.serviceWorker.controller) {
-                  this.notifyServiceWorkerUpdate(installing);
-                } else {
-                  console.info("[SW] Tartalom offline elérhető.");
-                }
-              }
-            });
-          });
-        })
-        .catch((error) => console.warn("[SW] Registration failed", error));
+  /* ---------- Results: list, search, filter, sort, edit/delete ---------- */
+  bindResults(){
+    $("#clearAll").addEventListener("click",()=>{
+      if(!confirm("Biztos üríted a listát?")) return;
+      const backup={saved:API.list("saved"),spent:API.list("spent")};
+      API.clearLists(); this.renderResults(); this.drawStats();
+      UI.snack("Lista törölve.",true,()=>{API.setList("saved",backup.saved);API.setList("spent",backup.spent);this.renderResults();this.drawStats();});
+    });
+    $("#searchBox").addEventListener("input",(e)=>{this.state.search=e.target.value.trim().toLowerCase(); this.renderResults();});
+    $("#filterSelect").addEventListener("change",(e)=>{this.state.filter=e.target.value; this.renderResults();});
+    $("#sortSelect").addEventListener("change",(e)=>{this.state.sort=e.target.value; this.renderResults();});
+  },
+  itemsFilteredSorted(){
+    const q=this.state.search; const filter=this.state.filter; const sort=this.state.sort;
+    let items=[...API.list("saved"),...API.list("spent")];
+    if(filter!=="all") items=items.filter(i=>i.type===filter);
+    if(q) items=items.filter(i=>(i.name||"").toLowerCase().includes(q));
+    items.sort((a,b)=>{
+      if(sort==="date_desc") return (b.at||0)-(a.at||0);
+      if(sort==="date_asc") return (a.at||0)-(b.at||0);
+      if(sort==="price_desc") return (b.price||0)-(a.price||0);
+      if(sort==="price_asc") return (a.price||0)-(b.price||0);
+      if(sort==="name_asc") return (a.name||"").localeCompare(b.name||"");
+      if(sort==="name_desc") return (b.name||"").localeCompare(a.name||"");
+      return 0;
+    });
+    return items;
+  },
+  renderResults(){
+    const saved=API.list("saved"), spent=API.list("spent");
+    const totalSaved=saved.reduce((s,i)=>s+Number(i.price||0),0);
+    const totalSpent=spent.reduce((s,i)=>s+Number(i.price||0),0);
+    $("#totalSaved").textContent=fmtFt(totalSaved);
+    $("#totalSpent").textContent=fmtFt(totalSpent);
+    $("#net").textContent=fmtFt(totalSaved-totalSpent);
 
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (!this.swUpdateNotified) return;
-        console.info("[SW] Controller changed, refreshing app");
-        setTimeout(() => window.location.reload(), 500);
-      });
+    const items=this.itemsFilteredSorted();
+    const ul=$("#itemList"); ul.innerHTML="";
+    items.forEach((it)=>{
+      const li=document.createElement("li"); li.className="item";
+      const meta=document.createElement("div"); meta.className="meta";
+      const badge=document.createElement("span"); badge.className="badge "+(it.type==="saved"?"b-green":"b-red"); badge.textContent=(it.type==="saved"?"spórolt":"vett");
+      const name=document.createElement("span"); name.innerHTML=esc(it.name);
+      const price=document.createElement("span"); price.className="price"; price.textContent=fmtFt(it.price);
+      meta.appendChild(badge); meta.appendChild(name); li.appendChild(meta); li.appendChild(price);
+      const actions=document.createElement("div"); actions.className="actions";
+      const editBtn=document.createElement("button"); editBtn.className="icon-btn secondary"; editBtn.title="Szerkesztés"; editBtn.textContent="✏️";
+      const delBtn=document.createElement("button"); delBtn.className="icon-btn danger"; delBtn.title="Törlés"; delBtn.textContent="🗑️";
+      actions.appendChild(editBtn); actions.appendChild(delBtn); li.appendChild(actions);
+      ul.appendChild(li);
+      editBtn.addEventListener("click",()=>this.editItem(it));
+      delBtn.addEventListener("click",()=>this.deleteItem(it));
+    });
+  },
+  editItem(item){
+    const newName=prompt("Új név:",item.name||""); if(newName===null) return;
+    let newPrice=prompt("Új ár (Ft):",String(item.price||0)); if(newPrice===null) return;
+    newPrice=Number(newPrice); if(!newName.trim()||!newPrice||newPrice<=0){alert("Érvénytelen érték.");return;}
+    const list=API.list(item.type).map(it=>{
+      if(it.at===item.at && it.name===item.name && it.price===item.price){
+        const ratio=(Number(it.price)>0 && Number.isFinite(Number(it.hours)))?Number(it.hours)/Number(it.price):null;
+        const hours=ratio!==null?Number((ratio*newPrice).toFixed(1)):it.hours;
+        return {...it,name:newName.trim(),price:newPrice,hours};
+      }
+      return it;
+    });
+    API.setList(item.type,list);
+    this.renderResults(); this.drawStats();
+    UI.snack("Tétel frissítve.");
+  },
+  deleteItem(item){
+    const list=API.list(item.type);
+    const idx=list.findIndex(it=>it.at===item.at && it.name===item.name && it.price===item.price);
+    if(idx===-1) return;
+    const removed=list[idx];
+    const updated=list.filter((_,i)=>i!==idx);
+    API.setList(item.type,updated);
+    this.renderResults(); this.drawStats();
+    UI.snack("Tétel törölve.",true,()=>{
+      const current=API.list(item.type);
+      if(current.some(it=>it.at===removed.at && it.name===removed.name && it.price===removed.price)) return;
+      const restored=[...current];
+      const insertAt=Math.min(idx,restored.length);
+      restored.splice(insertAt,0,removed);
+      API.setList(item.type,restored);
+      this.renderResults();
+      this.drawStats();
     });
   },
 
-  notifyServiceWorkerUpdate(worker) {
-    if (this.swUpdateNotified) return;
-    this.swUpdateNotified = true;
-    if (worker && worker.state === "installed" && worker.postMessage) {
-      worker.postMessage({ type: "SKIP_WAITING" });
+  /* ---------- Stats ---------- */
+  drawStats(){
+    const cvs=$("#statsCanvas"); const ctx=cvs.getContext("2d");
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    const monthKey=ts=>{const d=new Date(ts);return d.getFullYear()+"-"+MONTHS[d.getMonth()]};
+    const map=new Map();
+    API.list("saved").forEach(it=>{const k=monthKey(it.at||now()); const o=map.get(k)||{saved:0,spent:0}; o.saved+=Number(it.price)||0; map.set(k,o);});
+    API.list("spent").forEach(it=>{const k=monthKey(it.at||now()); const o=map.get(k)||{saved:0,spent:0}; o.spent+=Number(it.price)||0; map.set(k,o);});
+    const arr=[...map.entries()].sort((a,b)=>a[0]>b[0]?1:-1).slice(-8);
+    const labels=arr.map(x=>x[0]), sData=arr.map(x=>x[1].saved), pData=arr.map(x=>x[1].spent);
+    const P={l:48,r:22,t:16,b:40}, W=cvs.width-P.l-P.r, H=cvs.height-P.t-P.b;
+    const style=getComputedStyle(document.documentElement);
+    ctx.strokeStyle=style.getPropertyValue("--line"); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(P.l,P.t); ctx.lineTo(P.l,P.t+H); ctx.lineTo(P.l+W,P.t+H); ctx.stroke();
+    const max=Math.max(1000,...sData,...pData); const y=v=>P.t+H-(v/max)*H; const unit=W/Math.max(1,labels.length); const bar=unit/2.4;
+    for(let i=0;i<labels.length;i++){
+      const x0=P.l+i*unit+8;
+      ctx.fillStyle=style.getPropertyValue("--green"); ctx.fillRect(x0, y(sData[i]), bar, (P.t+H)-y(sData[i]));
+      ctx.fillStyle=style.getPropertyValue("--red"); ctx.fillRect(x0+bar+6, y(pData[i]), bar, (P.t+H)-y(pData[i]));
+      ctx.fillStyle=style.getPropertyValue("--muted"); ctx.font="12px system-ui"; ctx.textAlign="center";
+      ctx.fillText(labels[i], x0+bar/2+3, P.t+H+16);
     }
-    try {
-      UI.toast("Új verzió érkezett, frissítés…");
-    } catch (error) {
-      console.info("[SW] Update available");
+    if(pData.length>=3){
+      const avg=[]; for(let i=0;i<pData.length;i++){ const a=pData.slice(Math.max(0,i-2),i+1); avg.push(a.reduce((s,v)=>s+v,0)/a.length); }
+      ctx.beginPath(); ctx.lineWidth=2; ctx.strokeStyle=style.getPropertyValue("--blue");
+      for(let i=0;i<avg.length;i++){ const x=P.l+i*unit+bar; const yy=y(avg[i]); if(i===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy); }
+      ctx.stroke();
     }
   },
+
+  /* ---------- Goals ---------- */
+  bindGoals(){
+    $("#saveGoals").addEventListener("click",()=>{
+      const g={monthlyCap:Number($("#monthlyCap").value)||0, savingGoal:Number($("#savingGoal").value)||0};
+      API.saveGoals(g); this.updateGoalsUI(); UI.snack("Célok mentve.");
+    });
+    $("#resetGoals").addEventListener("click",()=>{API.saveGoals({monthlyCap:0,savingGoal:0}); $("#monthlyCap").value=""; $("#savingGoal").value=""; this.updateGoalsUI();});
+  },
+  updateGoalsUI(){
+    const g=API.goals(); $("#monthlyCap").value=g.monthlyCap||""; $("#savingGoal").value=g.savingGoal||"";
+    const totalSaved=(API.list("saved").reduce((s,i)=>s+Number(i.price||0),0)); const goal=g.savingGoal||0;
+    const pct=goal>0?Math.min(100,Math.round((totalSaved/goal)*100)):0;
+    $("#goalProgressBar").style.width=pct+"%"; $("#goalProgressLabel").textContent=pct+"%";
+  },
+
+  /* ---------- Profile modal from icon ---------- */
+  bindProfileModal(){
+    $("#profileIcon").addEventListener("click",()=>{
+      const p=API.profile()||{name:"",age:"",salary:"",hours:""};
+      $("#editName").value=p.name||""; $("#editAge").value=p.age||""; $("#editSalary").value=p.salary||""; $("#editHours").value=p.hours||"";
+      $("#profileModal").classList.remove("hidden");
+    });
+    $("#closeModal").addEventListener("click",()=>$("#profileModal").classList.add("hidden"));
+    $("#saveEditProfile").addEventListener("click",()=>{
+      const p={name:$("#editName").value.trim(),age:Number($("#editAge").value),salary:Number($("#editSalary").value),hours:Number($("#editHours").value)};
+      if(!p.name||!p.age||!p.salary||!p.hours){alert("Tölts ki minden mezőt!");return;}
+      API.saveProfile(p); $("#profileModal").classList.add("hidden"); this.updateProfileIcon(); this.syncCalcHello(); UI.snack("Profil frissítve.");
+    });
+    $("#deleteProfile").addEventListener("click",()=>{
+      if(!confirm("Biztos törlöd a profilodat és minden adatot?")) return;
+      API.deleteProfile(); $("#profileModal").classList.add("hidden"); $("#appScreen").classList.add("hidden"); $("#welcomeScreen").classList.remove("hidden");
+    });
+  },
+  updateProfileIcon(){
+    const p=API.profile(); if(!p||!p.name) return;
+    $("#profileIcon").textContent=(p.name[0]||"👤").toUpperCase();
+  },
+
+  /* ---------- Shortcuts ---------- */
+  bindShortcuts(){
+    document.addEventListener("keydown",(e)=>{
+      if(e.key==="Escape"){ $("#profileModal").classList.add("hidden"); $("#settingsModal").classList.add("hidden"); }
+      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); if(this.state.view!=="results") this.setView("results"); $("#searchBox").focus(); }
+    });
+  }
 };
 
-/* ======================================================================
-   Bootstrapping
-   ====================================================================== */
-document.addEventListener("DOMContentLoaded", () => {
-  App.init();
-});
+const A2HS=(()=>{
+  const sessionKey="a2hs-dismissed";
+  let deferred=null;
+  let pill=null;
+  let action=null;
+  let close=null;
+  const isStandalone=()=>{
+    return (window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||window.navigator.standalone===true;
+  };
+  const storage={
+    mark(){try{sessionStorage.setItem(sessionKey,"1");}catch(e){}},
+    dismissed(){try{return sessionStorage.getItem(sessionKey)==="1";}catch(e){return false;}}
+  };
+  const hide=()=>{if(pill) pill.classList.remove("show");};
+  const show=()=>{if(!pill||!deferred||storage.dismissed()) return; pill.classList.add("show");};
+  const bindInteractions=()=>{
+    if(!pill||!action||!close) return;
+    close.addEventListener("click",()=>{hide();storage.mark();});
+    action.addEventListener("click",async()=>{
+      hide();
+      storage.mark();
+      if(!deferred) return;
+      deferred.prompt();
+      try{await deferred.userChoice;}catch(e){}
+      deferred=null;
+    });
+  };
+  return{
+    init(){
+      if(isStandalone()) return;
+      pill=document.querySelector("#a2hsPill");
+      action=document.querySelector("#a2hsAction");
+      close=document.querySelector("#a2hsClose");
+      if(!pill||!action||!close) return;
+      bindInteractions();
+      window.addEventListener("beforeinstallprompt",(event)=>{
+        event.preventDefault();
+        deferred=event;
+        show();
+      });
+      window.addEventListener("appinstalled",()=>{storage.mark();hide();});
+    }
+  };
+})();
+
+const registerServiceWorker=()=>{
+  if(!("serviceWorker" in navigator)) return;
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js?v=2025-11-05-3").then((reg)=>{
+      console.info("Service worker registered:",reg.scope);
+    }).catch((err)=>{
+      console.error("Service worker registration failed:",err);
+    });
+  });
+};
+
+App.init();
+A2HS.init();
+registerServiceWorker();
